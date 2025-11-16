@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Bell, LogOut, Menu, X } from 'lucide-react';
+import { Bell, LogOut, Menu, X, Plus } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import AllIncidents from './AllIncidents';
 import MyReports from './MyReports';
 import MyTasks from './MyTasks';
 import AdminAnalytics from './AdminAnalytics';
+import ReportIncident from './ReportIncident';
 import type { User, Incident } from '../App';
 
 interface DashboardProps {
@@ -16,7 +17,7 @@ interface DashboardProps {
   onLogout: () => void;
 }
 
-type ViewType = 'dashboard' | 'my-reports' | 'my-tasks' | 'analytics';
+type ViewType = 'dashboard' | 'my-reports' | 'my-tasks' | 'analytics' | 'report-incident';
 
 export default function Dashboard({ user, incidents, onReportIncident, onUpdateStatus, onLogout }: DashboardProps) {
   const [currentView, setCurrentView] = useState<ViewType>('dashboard');
@@ -52,6 +53,7 @@ export default function Dashboard({ user, incidents, onReportIncident, onUpdateS
 
   const navigationItems = [
     { id: 'dashboard', label: 'Dashboard', icon: '🏠', roles: ['Estudiante', 'Trabajador', 'Administrador'] },
+    { id: 'report-incident', label: 'Crear Reporte', icon: '📝', roles: ['Estudiante', 'Trabajador', 'Administrador'] },
     { id: 'my-reports', label: 'Mis Reportes', icon: '📋', roles: ['Estudiante', 'Trabajador', 'Administrador'], badge: myPendingReports },
     { id: 'my-tasks', label: 'Mis Tareas', icon: '✅', roles: ['Trabajador'], badge: myPendingTasks },
     { id: 'analytics', label: 'Estadística', icon: '📊', roles: ['Administrador'] },
@@ -188,6 +190,16 @@ export default function Dashboard({ user, incidents, onReportIncident, onUpdateS
           {currentView === 'dashboard' && (
             <AllIncidents incidents={incidents} />
           )}
+          {currentView === 'report-incident' && (
+            <div className="max-w-4xl mx-auto">
+              <ReportIncident
+                onSubmit={(incident) => {
+                  onReportIncident(incident);
+                  setCurrentView('my-reports');
+                }}
+              />
+            </div>
+          )}
           {currentView === 'my-reports' && (
             <MyReports
               incidents={incidents.filter(i => i.userId === user.id)}
@@ -207,6 +219,15 @@ export default function Dashboard({ user, incidents, onReportIncident, onUpdateS
             <AdminAnalytics incidents={incidents} />
           )}
         </main>
+
+        {/* Floating Action Button for Quick Report */}
+        <button
+          onClick={() => setCurrentView('report-incident')}
+          className="fixed bottom-6 right-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full p-4 shadow-2xl hover:shadow-3xl transform hover:scale-110 transition-all duration-200 z-50 lg:hidden"
+          title="Crear Reporte Rápido"
+        >
+          <Plus className="h-6 w-6" />
+        </button>
       </div>
     </div>
   );
