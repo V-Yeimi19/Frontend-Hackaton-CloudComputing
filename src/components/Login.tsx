@@ -23,8 +23,20 @@ export default function Login({ onLogin, onSwitchToRegister }: LoginProps) {
         <div className="bg-white rounded-2xl shadow-2xl p-8">
           {/* Logo and Header */}
           <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-              <span className="text-3xl">🚨</span>
+            <div className="flex items-center justify-center mx-auto mb-4">
+              <img
+                src="/assets/utec-logo.svg"
+                alt="UTEC Logo"
+                className="h-16 w-auto"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                  if (fallback) fallback.style.display = 'flex';
+                }}
+              />
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl hidden items-center justify-center shadow-lg">
+                <span className="text-3xl font-bold text-white">U</span>
+              </div>
             </div>
             <h1 className="text-blue-900 mb-2">AlertaUTEC</h1>
             <p className="text-gray-600">Sistema de Gestión de Incidentes</p>
@@ -84,11 +96,6 @@ export default function Login({ onLogin, onSwitchToRegister }: LoginProps) {
               </button>
             </p>
           </div>
-        </div>
-
-        {/* Demo Info */}
-        <div className="mt-6 bg-blue-50 rounded-lg p-4 text-center">
-          <p className="text-blue-800 mb-2">💡 Demo - Usa cualquier credencial para ingresar</p>
         </div>
       </div>
     </div>
