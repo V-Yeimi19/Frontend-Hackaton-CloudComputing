@@ -197,8 +197,21 @@ export class AuthService {
       // Guardar token
       TokenStorage.saveToken(loginData.token);
 
-      // Determinar el rol correcto del frontend
-      let frontendRole = ROLE_MAPPING_INVERSE[loginData.user.rol] || 'Estudiante';
+      // Determinar el rol correcto del frontend basándose en rol y área
+      let frontendRole: string;
+
+      if (loginData.user.rol === 'administrativo') {
+        frontendRole = 'Administrador';
+      } else if (loginData.user.rol === 'usuario') {
+        // Diferenciar entre Estudiante y Trabajador por el área
+        if (loginData.user.area === 'estudiantil') {
+          frontendRole = 'Estudiante';
+        } else {
+          frontendRole = 'Trabajador';
+        }
+      } else {
+        frontendRole = 'Estudiante'; // Por defecto
+      }
 
       // Crear objeto de usuario compatible con el frontend
       const user = {
