@@ -20,7 +20,16 @@ export default function Register({ onRegister, onSwitchToLogin }: RegisterProps)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onRegister(name, email, password, role, role === 'Trabajador' ? workArea : undefined);
+
+    // Determinar el área según el rol
+    let area: WorkArea | undefined;
+    if (role === 'Estudiante') {
+      area = 'estudiantil' as WorkArea; // Para estudiantes se envía explícitamente "estudiantil"
+    } else if (role === 'Trabajador') {
+      area = workArea;
+    }
+
+    onRegister(name, email, password, role, area);
   };
 
   const workAreas: WorkArea[] = [
@@ -81,11 +90,10 @@ export default function Register({ onRegister, onSwitchToLogin }: RegisterProps)
               <Input
                 id="password"
                 type="password"
-                placeholder="Mínimo 8 caracteres"
+                placeholder="Ingresa tu contraseña"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                minLength={8}
               />
             </div>
 

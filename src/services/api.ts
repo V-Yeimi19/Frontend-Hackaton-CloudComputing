@@ -92,6 +92,9 @@ export class AuthService {
       // Mapear rol del frontend al backend
       const backendRole = ROLE_MAPPING[role] || 'usuario';
 
+      // Normalizar el área para el backend
+      const backendArea = area === 'estudiantil' ? 'estudiantil' : area;
+
       const response = await fetch(`${API_BASE_URL_SEGURIDAD}/usuarios`, {
         method: 'POST',
         headers: {
@@ -101,7 +104,7 @@ export class AuthService {
           email,
           password,
           rol: backendRole,
-          area,
+          area: backendArea,
         }),
       });
 
