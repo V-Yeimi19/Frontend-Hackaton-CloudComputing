@@ -3,6 +3,8 @@ import Login from './components/Login';
 import Register from './components/Register';
 import Dashboard from './components/Dashboard';
 import { websocketService } from './services/websocket';
+import { AuthService, IncidentService } from './services/api';
+import { toast } from 'sonner';
 
 export type UserRole = 'Estudiante' | 'Trabajador' | 'Administrador';
 
@@ -202,50 +204,84 @@ export default function App() {
     }
   }, [currentUser]);
 
-  const handleLogin = (email: string, password: string) => {
-    // Mock login - In production, validate against backend
-    const mockUser: User = {
-      id: '1',
-      name: 'Juan Pérez Rojas',
-      email: email,
-      role: 'Trabajador',
-      workArea: 'Limpieza',
-    };
-    setCurrentUser(mockUser);
-    setCurrentView('dashboard');
+  const handleLogin = async (email: string, password: string) => {
+    try {
+      const result = await AuthService.login(email, password);
+
+      if (result.success && result.data) {
+        setCurrentUser(result.data.user);
+        setCurrentView('dashboard');
+        toast.success('¡Bienvenido! Sesión iniciada correctamente.');
+      } else {
+        toast.error(result.error || 'Error al iniciar sesión');
+      }
+    } catch (error) {
+      console.error('Error en login:', error);
+      toast.error('Error de conexión. Por favor intenta de nuevo.');
+    }
   };
 
-  const handleRegister = (name: string, email: string, password: string, role: UserRole, workArea?: WorkArea) => {
-    const newUser: User = {
-      id: Date.now().toString(),
-      name,
-      email,
-      role,
-      workArea,
-    };
-    setCurrentUser(newUser);
-    setCurrentView('dashboard');
+  const handleRegister = async (name: string, email: string, password: string, role: UserRole, workArea?: WorkArea) => {
+    try {
+      const result = await AuthService.register(
+        email,
+        password,
+        role,
+        workArea || '',
+        name
+      );
+
+      if (result.success && result.data) {
+        setCurrentUser(result.data.user);
+        setCurrentView('dashboard');
+        toast.success('¡Cuenta creada exitosamente!');
+      } else {
+        toast.error(result.error || 'Error al registrar usuario');
+      }
+    } catch (error) {
+      console.error('Error en register:', error);
+      toast.error('Error de conexión. Por favor intenta de nuevo.');
+    }
   };
 
-  const handleReportIncident = (incident: Omit<Incident, 'id' | 'userId' | 'userName' | 'userEmail' | 'status' | 'createdAt' | 'updatedAt' | 'priority'>) => {
+  const handleReportIncident = async (incident: Omit<Incident, 'id' | 'userId' | 'userName' | 'userEmail' | 'status' | 'createdAt' | 'updatedAt' | 'priority'>) => {
     if (!currentUser) return;
 
-    // Calculate priority based on severity
-    const priorityMap = { 'Baja': 1, 'Media': 2, 'Alta': 3, 'Crítica': 4 };
+    try {
+      const result = await IncidentService.createIncident({
+        description: incident.description,
+        category: incident.category,
+        severity: incident.severity,
+        location: incident.location,
+        floor: incident.floor,
+        assignedArea: incident.assignedArea,
+      });
 
-    const newIncident: Incident = {
-      ...incident,
-      id: Date.now().toString(),
-      userId: currentUser.id,
-      userName: currentUser.name,
-      userEmail: currentUser.email,
-      status: 'Pendiente',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      priority: priorityMap[incident.severity],
-    };
+      if (result.success && result.data) {
+        // Calculate priority based on severity
+        const priorityMap = { 'Baja': 1, 'Media': 2, 'Alta': 3, 'Crítica': 4 };
 
-    setIncidents([newIncident, ...incidents]);
+        const newIncident: Incident = {
+          ...incident,
+          id: result.data.id || Date.now().toString(),
+          userId: currentUser.id,
+          userName: currentUser.name,
+          userEmail: currentUser.email,
+          status: 'Pendiente',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          priority: priorityMap[incident.severity],
+        };
+
+        setIncidents([newIncident, ...incidents]);
+        toast.success('Incidente reportado exitosamente');
+      } else {
+        toast.error(result.error || 'Error al reportar incidente');
+      }
+    } catch (error) {
+      console.error('Error al reportar incidente:', error);
+      toast.error('Error de conexión. Por favor intenta de nuevo.');
+    }
   };
 
   const handleUpdateStatus = (incidentId: string, newStatus: 'Pendiente' | 'En Proceso' | 'Finalizado') => {
@@ -269,8 +305,10 @@ export default function App() {
   };
 
   const handleLogout = () => {
+    AuthService.logout();
     setCurrentUser(null);
     setCurrentView('login');
+    toast.info('Sesión cerrada correctamente');
   };
 
   if (currentView === 'login') {
