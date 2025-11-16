@@ -1,7 +1,9 @@
 // Servicio de API REST para integración con el backend
 
 const API_BASE_URL_SEGURIDAD = 'https://t0j3621dni.execute-api.us-east-1.amazonaws.com';
-const API_BASE_URL_INCIDENTES = 'https://3lp5hoedy7.execute-api.us-east-1.amazonaws.com';
+const API_BASE_URL_INCIDENTES = 'https://xzvr9v0w86.execute-api.us-east-1.amazonaws.com';
+const API_BASE_URL_VALIDAR_TOKEN = 'https://3lp5hoedy7.execute-api.us-east-1.amazonaws.com';
+const API_BASE_URL_ESTADO_INCIDENTE = 'https://qtnopzqirh.execute-api.us-east-1.amazonaws.com';
 
 // Mapeo de roles: Frontend -> Backend
 const ROLE_MAPPING: Record<string, string> = {
@@ -350,6 +352,95 @@ export class IncidentService {
       };
     } catch (error) {
       console.error('Error en deleteIncident:', error);
+      return {
+        success: false,
+        error: 'Error de conexión con el servidor',
+      };
+    }
+  }
+
+  /**
+   * Actualizar estado de un incidente
+   * PATCH /incidentes/{id}/estado
+   */
+  static async updateIncidentStatus(
+    id: string,
+    newStatus: 'Pendiente' | 'En Proceso' | 'Finalizado'
+  ): Promise<{ success: boolean; data?: any; error?: string }> {
+    try {
+      const token = TokenStorage.getToken();
+
+      if (!token) {
+        return {
+          success: false,
+          error: 'No hay sesión activa',
+        };
+      }
+
+      const response = await fetch(`${API_BASE_URL_ESTADO_INCIDENTE}/incidentes/${id}/estado`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          estado: newStatus,
+        }),
+      });
+
+      const data: IncidentResponse | ErrorResponse = await response.json();
+
+      if (!response.ok) {
+        return {
+          success: false,
+          error: (data as ErrorResponse).message || 'Error al actualizar estado del incidente',
+        };
+      }
+
+      return {
+        success: true,
+        data: (data as IncidentResponse).incidente,
+      };
+    } catch (error) {
+      console.error('Error en updateIncidentStatus:', error);
+      return {
+        success: false,
+        error: 'Error de conexión con el servidor',
+      };
+    }
+  }
+
+  /**
+   * Validar token de autenticación
+   * POST /validar-token
+   */
+  static async validateToken(token: string): Promise<{ success: boolean; data?: any; error?: string }> {
+    try {
+      const response = await fetch(`${API_BASE_URL_VALIDAR_TOKEN}/validar-token`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          token,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return {
+          success: false,
+          error: data.message || 'Token inválido',
+        };
+      }
+
+      return {
+        success: true,
+        data,
+      };
+    } catch (error) {
+      console.error('Error en validateToken:', error);
       return {
         success: false,
         error: 'Error de conexión con el servidor',

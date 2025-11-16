@@ -284,24 +284,36 @@ export default function App() {
     }
   };
 
-  const handleUpdateStatus = (incidentId: string, newStatus: 'Pendiente' | 'En Proceso' | 'Finalizado') => {
-    setIncidents(incidents.map(inc => {
-      if (inc.id === incidentId) {
-        const updated: Incident = {
-          ...inc,
-          status: newStatus,
-          updatedAt: new Date(),
-        };
-        
-        if (newStatus === 'Finalizado' && currentUser) {
-          updated.resolvedAt = new Date();
-          updated.resolvedBy = currentUser.name;
-        }
-        
-        return updated;
+  const handleUpdateStatus = async (incidentId: string, newStatus: 'Pendiente' | 'En Proceso' | 'Finalizado') => {
+    try {
+      const result = await IncidentService.updateIncidentStatus(incidentId, newStatus);
+
+      if (result.success) {
+        setIncidents(incidents.map(inc => {
+          if (inc.id === incidentId) {
+            const updated: Incident = {
+              ...inc,
+              status: newStatus,
+              updatedAt: new Date(),
+            };
+
+            if (newStatus === 'Finalizado' && currentUser) {
+              updated.resolvedAt = new Date();
+              updated.resolvedBy = currentUser.name;
+            }
+
+            return updated;
+          }
+          return inc;
+        }));
+        toast.success('Estado del incidente actualizado correctamente');
+      } else {
+        toast.error(result.error || 'Error al actualizar el estado');
       }
-      return inc;
-    }));
+    } catch (error) {
+      console.error('Error al actualizar estado:', error);
+      toast.error('Error de conexión. Por favor intenta de nuevo.');
+    }
   };
 
   const handleLogout = () => {
