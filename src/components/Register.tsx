@@ -20,7 +20,7 @@ export default function Register({ onRegister, onSwitchToLogin }: RegisterProps)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onRegister(name, email, password, role, role === 'Colaborador' ? workArea : undefined);
+    onRegister(name, email, password, role, role === 'Trabajador' ? workArea : undefined);
   };
 
   const workAreas: WorkArea[] = [
@@ -102,19 +102,19 @@ export default function Register({ onRegister, onSwitchToLogin }: RegisterProps)
                   </Label>
                 </div>
                 <div className="flex items-center space-x-3 border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                  <RadioGroupItem value="Colaborador" id="colaborador" />
-                  <Label htmlFor="colaborador" className="flex-1 cursor-pointer">
+                  <RadioGroupItem value="Trabajador" id="trabajador" />
+                  <Label htmlFor="trabajador" className="flex-1 cursor-pointer">
                     <div>
-                      <div className="text-gray-900">Colaborador</div>
+                      <div className="text-gray-900">Trabajador</div>
                       <div className="text-gray-500">Personal que atiende incidentes</div>
                     </div>
                   </Label>
                 </div>
                 <div className="flex items-center space-x-3 border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                  <RadioGroupItem value="Administrativo" id="administrativo" />
-                  <Label htmlFor="administrativo" className="flex-1 cursor-pointer">
+                  <RadioGroupItem value="Administrador" id="administrador" />
+                  <Label htmlFor="administrador" className="flex-1 cursor-pointer">
                     <div>
-                      <div className="text-gray-900">Administrativo</div>
+                      <div className="text-gray-900">Administrador</div>
                       <div className="text-gray-500">Acceso a panel de análisis</div>
                     </div>
                   </Label>
@@ -122,7 +122,7 @@ export default function Register({ onRegister, onSwitchToLogin }: RegisterProps)
               </RadioGroup>
             </div>
 
-            {role === 'Colaborador' && (
+            {role === 'Trabajador' && (
               <div className="space-y-2 bg-blue-50 p-4 rounded-lg border border-blue-200">
                 <Label htmlFor="workArea">Área de Trabajo</Label>
                 <Select value={workArea} onValueChange={(value) => setWorkArea(value as WorkArea)}>

@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Login from './components/Login';
 import Register from './components/Register';
 import Dashboard from './components/Dashboard';
+import { websocketService } from './services/websocket';
 
-export type UserRole = 'Estudiante' | 'Colaborador' | 'Administrativo';
+export type UserRole = 'Estudiante' | 'Trabajador' | 'Administrador';
 
 export type WorkArea = 
   | 'Bienestar Estudiantil'
@@ -154,13 +155,60 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [incidents, setIncidents] = useState<Incident[]>(mockIncidents);
 
+  // Configurar WebSocket cuando el usuario inicia sesión
+  useEffect(() => {
+    if (currentUser) {
+      // Conectar al WebSocket
+      websocketService.connect(currentUser.id);
+
+      // Escuchar actualizaciones globales de incidentes
+      websocketService.onIncidentUpdate((updatedIncident) => {
+        setIncidents(prev =>
+          prev.map(inc => inc.id === updatedIncident.id ? updatedIncident : inc)
+        );
+      });
+
+      websocketService.onIncidentCreated((newIncident) => {
+        setIncidents(prev => [newIncident, ...prev]);
+      });
+
+      websocketService.onIncidentStatusChanged((data) => {
+        setIncidents(prev =>
+          prev.map(inc => {
+            if (inc.id === data.incidentId) {
+              return {
+                ...inc,
+                status: data.status as 'Pendiente' | 'En Proceso' | 'Finalizado',
+                updatedAt: new Date(data.updatedAt),
+              };
+            }
+            return inc;
+          })
+        );
+      });
+
+      // Si el usuario es trabajador, unirse a la sala de su área
+      if (currentUser.role === 'Trabajador' && currentUser.workArea) {
+        websocketService.joinRoom(currentUser.workArea);
+      }
+
+      // Cleanup al cerrar sesión
+      return () => {
+        if (currentUser.role === 'Trabajador' && currentUser.workArea) {
+          websocketService.leaveRoom(currentUser.workArea);
+        }
+        websocketService.disconnect();
+      };
+    }
+  }, [currentUser]);
+
   const handleLogin = (email: string, password: string) => {
     // Mock login - In production, validate against backend
     const mockUser: User = {
       id: '1',
       name: 'Juan Pérez Rojas',
       email: email,
-      role: 'Colaborador',
+      role: 'Trabajador',
       workArea: 'Limpieza',
     };
     setCurrentUser(mockUser);

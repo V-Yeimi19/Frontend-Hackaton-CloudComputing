@@ -2,10 +2,9 @@ import { useState } from 'react';
 import { Bell, LogOut, Menu, X } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import ReportIncident from './ReportIncident';
+import AllIncidents from './AllIncidents';
 import MyReports from './MyReports';
-import AreaIncidents from './AreaIncidents';
-import ResolvedIncidents from './ResolvedIncidents';
+import MyTasks from './MyTasks';
 import AdminAnalytics from './AdminAnalytics';
 import type { User, Incident } from '../App';
 
@@ -17,16 +16,16 @@ interface DashboardProps {
   onLogout: () => void;
 }
 
-type ViewType = 'report' | 'my-reports' | 'area-incidents' | 'resolved' | 'analytics';
+type ViewType = 'dashboard' | 'my-reports' | 'my-tasks' | 'analytics';
 
 export default function Dashboard({ user, incidents, onReportIncident, onUpdateStatus, onLogout }: DashboardProps) {
-  const [currentView, setCurrentView] = useState<ViewType>('report');
+  const [currentView, setCurrentView] = useState<ViewType>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Calculate notifications
   const myPendingReports = incidents.filter(i => i.userId === user.id && i.status !== 'Finalizado').length;
-  const areaPendingIncidents = user.workArea 
-    ? incidents.filter(i => i.assignedArea === user.workArea && i.status === 'Pendiente').length 
+  const myPendingTasks = user.workArea
+    ? incidents.filter(i => i.assignedArea === user.workArea && i.status !== 'Finalizado').length
     : 0;
 
   const getInitials = (name: string) => {
@@ -42,9 +41,9 @@ export default function Dashboard({ user, incidents, onReportIncident, onUpdateS
     switch (role) {
       case 'Estudiante':
         return 'bg-green-100 text-green-800 border-green-200';
-      case 'Colaborador':
+      case 'Trabajador':
         return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'Administrativo':
+      case 'Administrador':
         return 'bg-purple-100 text-purple-800 border-purple-200';
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200';
@@ -52,11 +51,10 @@ export default function Dashboard({ user, incidents, onReportIncident, onUpdateS
   };
 
   const navigationItems = [
-    { id: 'report', label: 'Reportar Incidente', icon: '📝', roles: ['Estudiante', 'Colaborador', 'Administrativo'] },
-    { id: 'my-reports', label: 'Mis Reportes', icon: '📋', roles: ['Estudiante', 'Colaborador', 'Administrativo'], badge: myPendingReports },
-    { id: 'area-incidents', label: `Incidentes ${user.workArea || ''}`, icon: '🎯', roles: ['Colaborador'], badge: areaPendingIncidents },
-    { id: 'resolved', label: 'Reportes Atendidos', icon: '✅', roles: ['Colaborador'] },
-    { id: 'analytics', label: 'Panel de Análisis', icon: '📊', roles: ['Administrativo'] },
+    { id: 'dashboard', label: 'Dashboard', icon: '🏠', roles: ['Estudiante', 'Trabajador', 'Administrador'] },
+    { id: 'my-reports', label: 'Mis Reportes', icon: '📋', roles: ['Estudiante', 'Trabajador', 'Administrador'], badge: myPendingReports },
+    { id: 'my-tasks', label: 'Mis Tareas', icon: '✅', roles: ['Trabajador'], badge: myPendingTasks },
+    { id: 'analytics', label: 'Estadística', icon: '📊', roles: ['Administrador'] },
   ];
 
   const visibleNavItems = navigationItems.filter(item => item.roles.includes(user.role));
@@ -178,7 +176,7 @@ export default function Dashboard({ user, incidents, onReportIncident, onUpdateS
             </div>
             <button className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors">
               <Bell className="h-5 w-5 text-gray-600" />
-              {(myPendingReports + areaPendingIncidents) > 0 && (
+              {(myPendingReports + myPendingTasks) > 0 && (
                 <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
               )}
             </button>
@@ -187,26 +185,25 @@ export default function Dashboard({ user, incidents, onReportIncident, onUpdateS
 
         {/* Content Area */}
         <main className="flex-1 p-6 overflow-y-auto">
-          {currentView === 'report' && (
-            <ReportIncident onSubmit={onReportIncident} />
+          {currentView === 'dashboard' && (
+            <AllIncidents incidents={incidents} />
           )}
           {currentView === 'my-reports' && (
-            <MyReports incidents={incidents.filter(i => i.userId === user.id)} />
+            <MyReports
+              incidents={incidents.filter(i => i.userId === user.id)}
+              userId={user.id}
+              onIncidentUpdate={(incident) => {
+                onUpdateStatus(incident.id, incident.status);
+              }}
+            />
           )}
-          {currentView === 'area-incidents' && user.workArea && (
-            <AreaIncidents
-              workArea={user.workArea}
-              incidents={incidents.filter(i => i.assignedArea === user.workArea && i.status !== 'Finalizado')}
+          {currentView === 'my-tasks' && user.role === 'Trabajador' && user.workArea && (
+            <MyTasks
+              incidents={incidents.filter(i => i.assignedArea === user.workArea)}
               onUpdateStatus={onUpdateStatus}
             />
           )}
-          {currentView === 'resolved' && user.workArea && (
-            <ResolvedIncidents
-              workArea={user.workArea}
-              incidents={incidents.filter(i => i.assignedArea === user.workArea && i.status === 'Finalizado')}
-            />
-          )}
-          {currentView === 'analytics' && user.role === 'Administrativo' && (
+          {currentView === 'analytics' && user.role === 'Administrador' && (
             <AdminAnalytics incidents={incidents} />
           )}
         </main>

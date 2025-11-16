@@ -1,16 +1,84 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Badge } from './ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Calendar, Clock, MapPin, TrendingUp, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { websocketService } from '../services/websocket';
 import type { Incident } from '../App';
 
 interface MyReportsProps {
   incidents: Incident[];
+  userId?: string;
+  onIncidentUpdate?: (incident: Incident) => void;
 }
 
-export default function MyReports({ incidents }: MyReportsProps) {
+export default function MyReports({ incidents, userId, onIncidentUpdate }: MyReportsProps) {
   const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'progress' | 'resolved'>('all');
+  const [liveIncidents, setLiveIncidents] = useState<Incident[]>(incidents);
+
+  // Sincronizar incidentes cuando cambian las props
+  useEffect(() => {
+    setLiveIncidents(incidents);
+  }, [incidents]);
+
+  // Configurar WebSocket para actualizaciones en tiempo real
+  useEffect(() => {
+    if (!userId) return;
+
+    // Manejar actualizaciones de incidentes
+    const handleIncidentUpdate = (updatedIncident: Incident) => {
+      // Solo actualizar si el incidente pertenece al usuario
+      if (updatedIncident.userId === userId) {
+        setLiveIncidents(prev =>
+          prev.map(inc => inc.id === updatedIncident.id ? updatedIncident : inc)
+        );
+
+        // Notificar al componente padre si existe el callback
+        if (onIncidentUpdate) {
+          onIncidentUpdate(updatedIncident);
+        }
+      }
+    };
+
+    // Manejar nuevos incidentes creados
+    const handleIncidentCreated = (newIncident: Incident) => {
+      if (newIncident.userId === userId) {
+        setLiveIncidents(prev => [newIncident, ...prev]);
+
+        if (onIncidentUpdate) {
+          onIncidentUpdate(newIncident);
+        }
+      }
+    };
+
+    // Manejar cambios de estado
+    const handleStatusChanged = (data: { incidentId: string; status: string; updatedAt: Date }) => {
+      setLiveIncidents(prev =>
+        prev.map(inc => {
+          if (inc.id === data.incidentId) {
+            return {
+              ...inc,
+              status: data.status as 'Pendiente' | 'En Proceso' | 'Finalizado',
+              updatedAt: new Date(data.updatedAt),
+            };
+          }
+          return inc;
+        })
+      );
+    };
+
+    // Suscribirse a eventos
+    websocketService.onIncidentUpdate(handleIncidentUpdate);
+    websocketService.onIncidentCreated(handleIncidentCreated);
+    websocketService.onIncidentStatusChanged(handleStatusChanged);
+
+    // Cleanup: remover listeners al desmontar
+    return () => {
+      websocketService.off('incident:updated', handleIncidentUpdate);
+      websocketService.off('incident:created', handleIncidentCreated);
+      websocketService.off('incident:status-changed', handleStatusChanged);
+    };
+  }, [userId, onIncidentUpdate]);
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
@@ -86,13 +154,13 @@ export default function MyReports({ incidents }: MyReportsProps) {
   };
 
   const filterIncidents = (status?: string) => {
-    if (!status) return incidents;
-    return incidents.filter(i => i.status === status);
+    if (!status) return liveIncidents;
+    return liveIncidents.filter(i => i.status === status);
   };
 
-  const pendingCount = incidents.filter(i => i.status === 'Pendiente').length;
-  const progressCount = incidents.filter(i => i.status === 'En Proceso').length;
-  const resolvedCount = incidents.filter(i => i.status === 'Finalizado').length;
+  const pendingCount = liveIncidents.filter(i => i.status === 'Pendiente').length;
+  const progressCount = liveIncidents.filter(i => i.status === 'En Proceso').length;
+  const resolvedCount = liveIncidents.filter(i => i.status === 'Finalizado').length;
 
   const getDisplayedIncidents = () => {
     switch (activeTab) {
@@ -113,10 +181,20 @@ export default function MyReports({ incidents }: MyReportsProps) {
     <div className="max-w-6xl mx-auto">
       {/* Header */}
       <div className="mb-6">
-        <h2 className="text-gray-900 mb-2">Mis Reportes</h2>
-        <p className="text-gray-600">
-          Visualiza el estado de todos tus reportes en tiempo real
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-gray-900 mb-2">Mis Reportes</h2>
+            <p className="text-gray-600">
+              Visualiza el estado de todos tus reportes en tiempo real
+            </p>
+          </div>
+          {websocketService.isConnected() && (
+            <div className="flex items-center gap-2 text-green-600 bg-green-50 px-3 py-2 rounded-lg border border-green-200">
+              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+              <span className="text-sm font-medium">En vivo</span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Stats */}
@@ -126,7 +204,7 @@ export default function MyReports({ incidents }: MyReportsProps) {
             <span className="text-gray-600">Total</span>
             <TrendingUp className="h-5 w-5 text-gray-400" />
           </div>
-          <p className="text-gray-900">{incidents.length}</p>
+          <p className="text-gray-900">{liveIncidents.length}</p>
           <p className="text-gray-500">reportes</p>
         </div>
 
@@ -161,7 +239,7 @@ export default function MyReports({ incidents }: MyReportsProps) {
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="space-y-6">
         <TabsList className="grid w-full grid-cols-4 bg-gray-100">
-          <TabsTrigger value="all">Todos ({incidents.length})</TabsTrigger>
+          <TabsTrigger value="all">Todos ({liveIncidents.length})</TabsTrigger>
           <TabsTrigger value="pending">Pendientes ({pendingCount})</TabsTrigger>
           <TabsTrigger value="progress">En Proceso ({progressCount})</TabsTrigger>
           <TabsTrigger value="resolved">Resueltos ({resolvedCount})</TabsTrigger>

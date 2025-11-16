@@ -7,17 +7,19 @@ import type { Incident } from '../App';
 
 interface MyTasksProps {
   incidents: Incident[];
-  onUpdateStatus: (incidentId: string, status: 'Pendiente' | 'En atención' | 'Terminado') => void;
+  onUpdateStatus: (incidentId: string, status: 'Pendiente' | 'En Proceso' | 'Finalizado') => void;
 }
 
 export default function MyTasks({ incidents, onUpdateStatus }: MyTasksProps) {
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case 'débil':
+      case 'Baja':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'Media':
         return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'moderado':
+      case 'Alta':
         return 'bg-orange-100 text-orange-800 border-orange-200';
-      case 'fuerte':
+      case 'Crítica':
         return 'bg-red-100 text-red-800 border-red-200';
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200';
@@ -28,9 +30,9 @@ export default function MyTasks({ incidents, onUpdateStatus }: MyTasksProps) {
     switch (status) {
       case 'Pendiente':
         return 'bg-gray-100 text-gray-800 border-gray-300';
-      case 'En atención':
+      case 'En Proceso':
         return 'bg-blue-100 text-blue-800 border-blue-300';
-      case 'Terminado':
+      case 'Finalizado':
         return 'bg-green-100 text-green-800 border-green-300';
       default:
         return 'bg-gray-100 text-gray-800 border-gray-300';
@@ -48,8 +50,8 @@ export default function MyTasks({ incidents, onUpdateStatus }: MyTasksProps) {
   };
 
   const pendingCount = incidents.filter(i => i.status === 'Pendiente').length;
-  const inProgressCount = incidents.filter(i => i.status === 'En atención').length;
-  const completedCount = incidents.filter(i => i.status === 'Terminado').length;
+  const inProgressCount = incidents.filter(i => i.status === 'En Proceso').length;
+  const completedCount = incidents.filter(i => i.status === 'Finalizado').length;
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -120,7 +122,7 @@ export default function MyTasks({ incidents, onUpdateStatus }: MyTasksProps) {
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       <Badge className={getSeverityColor(incident.severity)}>
-                        {incident.severity.charAt(0).toUpperCase() + incident.severity.slice(1)}
+                        {incident.severity}
                       </Badge>
                       <Badge className={getStatusColor(incident.status)}>
                         {incident.status}
@@ -132,15 +134,15 @@ export default function MyTasks({ incidents, onUpdateStatus }: MyTasksProps) {
                   
                   <Select
                     value={incident.status}
-                    onValueChange={(value) => onUpdateStatus(incident.id, value as 'Pendiente' | 'En atención' | 'Terminado')}
+                    onValueChange={(value) => onUpdateStatus(incident.id, value as 'Pendiente' | 'En Proceso' | 'Finalizado')}
                   >
                     <SelectTrigger className="w-[180px]">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Pendiente">Pendiente</SelectItem>
-                      <SelectItem value="En atención">En atención</SelectItem>
-                      <SelectItem value="Terminado">Terminado</SelectItem>
+                      <SelectItem value="En Proceso">En Proceso</SelectItem>
+                      <SelectItem value="Finalizado">Finalizado</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
