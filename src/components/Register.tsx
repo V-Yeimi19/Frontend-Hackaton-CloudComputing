@@ -24,7 +24,9 @@ export default function Register({ onRegister, onSwitchToLogin }: RegisterProps)
     // Determinar el área según el rol
     let area: WorkArea | undefined;
     if (role === 'Estudiante') {
-      area = 'estudiantil' as WorkArea; // Para estudiantes se envía explícitamente "estudiantil"
+      area = 'estudiantil' as WorkArea; // Para estudiantes se envía "estudiantil"
+    } else if (role === 'Administrador') {
+      area = 'administrativo' as WorkArea; // Para administradores se envía "administrativo"
     } else if (role === 'Trabajador') {
       area = workArea;
     }
