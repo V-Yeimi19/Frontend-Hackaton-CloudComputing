@@ -1,9 +1,10 @@
 // Servicio de API REST para integración con el backend
 
-const API_BASE_URL_SEGURIDAD = 'https://t0j3621dni.execute-api.us-east-1.amazonaws.com';
-const API_BASE_URL_INCIDENTES = 'https://xzvr9v0w86.execute-api.us-east-1.amazonaws.com';
-const API_BASE_URL_VALIDAR_TOKEN = 'https://3lp5hoedy7.execute-api.us-east-1.amazonaws.com';
-const API_BASE_URL_ESTADO_INCIDENTE = 'https://qtnopzqirh.execute-api.us-east-1.amazonaws.com';
+const API_BASE_URL_SEGURIDAD = 'https://ejxa6zzhk3.execute-api.us-east-1.amazonaws.com';
+const API_BASE_URL_INCIDENTES = 'https://jdbbruotf8.execute-api.us-east-1.amazonaws.com';
+const API_BASE_URL_VALIDAR_TOKEN = 'https://jdbbruotf8.execute-api.us-east-1.amazonaws.com';
+const API_BASE_URL_ESTADO_INCIDENTE = 'https://rqa3td2hlc.execute-api.us-east-1.amazonaws.com';
+const API_BASE_URL_ADMIN_PANEL = 'https://sw8gon2h0d.execute-api.us-east-1.amazonaws.com';
 
 // Mapeo de roles: Frontend -> Backend
 const ROLE_MAPPING: Record<string, string> = {
@@ -48,6 +49,29 @@ interface IncidentResponse {
 interface ErrorResponse {
   message: string;
   detail?: string;
+}
+
+interface IncidentSummary {
+  totalIncidentes: number;
+  pendientes: number;
+  atendiendo: number;
+  finalizados: number;
+  porArea?: Record<string, number>;
+  porCategoria?: Record<string, number>;
+}
+
+interface ActiveIncident {
+  id: string;
+  descripcion: string;
+  categoria: string;
+  nivelDeGravedad: string;
+  ubicacion: string;
+  piso?: string;
+  estado: string;
+  areaAsignada?: string;
+  creadoPor: string;
+  fechaCreacion: string;
+  fechaActualizacion?: string;
 }
 
 // Storage para el token
@@ -465,6 +489,97 @@ export class IncidentService {
       };
     } catch (error) {
       console.error('Error en validateToken:', error);
+      return {
+        success: false,
+        error: 'Error de conexión con el servidor',
+      };
+    }
+  }
+}
+
+// Servicio de Administración
+export class AdminService {
+  /**
+   * Listar incidentes activos (Pendientes y Atendiendo)
+   * GET /incidentes/activos
+   */
+  static async listActiveIncidents(): Promise<{ success: boolean; data?: ActiveIncident[]; error?: string }> {
+    try {
+      const token = TokenStorage.getToken();
+
+      if (!token) {
+        return {
+          success: false,
+          error: 'No hay sesión activa',
+        };
+      }
+
+      const response = await fetch(`${API_BASE_URL_ADMIN_PANEL}/incidentes/activos`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return {
+          success: false,
+          error: data.message || 'Error al obtener incidentes activos',
+        };
+      }
+
+      return {
+        success: true,
+        data: data.incidentes || [],
+      };
+    } catch (error) {
+      console.error('Error en listActiveIncidents:', error);
+      return {
+        success: false,
+        error: 'Error de conexión con el servidor',
+      };
+    }
+  }
+
+  /**
+   * Obtener resumen de incidentes
+   * GET /incidentes/resumen
+   */
+  static async getIncidentsSummary(): Promise<{ success: boolean; data?: IncidentSummary; error?: string }> {
+    try {
+      const token = TokenStorage.getToken();
+
+      if (!token) {
+        return {
+          success: false,
+          error: 'No hay sesión activa',
+        };
+      }
+
+      const response = await fetch(`${API_BASE_URL_ADMIN_PANEL}/incidentes/resumen`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return {
+          success: false,
+          error: data.message || 'Error al obtener resumen de incidentes',
+        };
+      }
+
+      return {
+        success: true,
+        data: data.resumen || data,
+      };
+    } catch (error) {
+      console.error('Error en getIncidentsSummary:', error);
       return {
         success: false,
         error: 'Error de conexión con el servidor',

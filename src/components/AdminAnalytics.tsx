@@ -1,15 +1,53 @@
+import { useEffect, useState } from 'react';
 import { Badge } from './ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
-import { TrendingUp, TrendingDown, AlertTriangle, CheckCircle2, Clock, MapPin } from 'lucide-react';
+import { TrendingUp, TrendingDown, AlertTriangle, CheckCircle2, Clock, MapPin, Loader2 } from 'lucide-react';
+import { AdminService } from '../services/api';
+import { toast } from 'sonner';
 import type { Incident, WorkArea } from '../App';
 
 interface AdminAnalyticsProps {
   incidents: Incident[];
 }
 
+interface BackendSummary {
+  totalIncidentes: number;
+  pendientes: number;
+  atendiendo: number;
+  finalizados: number;
+  porArea?: Record<string, number>;
+  porCategoria?: Record<string, number>;
+}
+
 export default function AdminAnalytics({ incidents }: AdminAnalyticsProps) {
+  const [backendSummary, setBackendSummary] = useState<BackendSummary | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch backend summary on mount
+  useEffect(() => {
+    const fetchSummary = async () => {
+      setLoading(true);
+      const result = await AdminService.getIncidentsSummary();
+
+      if (result.success && result.data) {
+        setBackendSummary(result.data);
+      } else {
+        console.error('Error fetching summary:', result.error);
+        toast.error('Error al cargar el resumen de incidentes');
+      }
+      setLoading(false);
+    };
+
+    fetchSummary();
+  }, []);
+
+  // Use backend data if available, otherwise use local data
+  const totalIncidentsFromBackend = backendSummary?.totalIncidentes ?? null;
+  const pendingFromBackend = backendSummary?.pendientes ?? null;
+  const inProgressFromBackend = backendSummary?.atendiendo ?? null;
+  const resolvedFromBackend = backendSummary?.finalizados ?? null;
   // Calculate stats by area
   const areaStats = incidents.reduce((acc, incident) => {
     const area = incident.assignedArea;
@@ -61,16 +99,21 @@ export default function AdminAnalytics({ incidents }: AdminAnalyticsProps) {
     { name: 'Crítica', value: incidents.filter(i => i.severity === 'Crítica').length, color: '#ef4444' },
   ];
 
+  // Use backend data for status when available
+  const pendingCount = pendingFromBackend ?? incidents.filter(i => i.status === 'Pendiente').length;
+  const inProgressCount = inProgressFromBackend ?? incidents.filter(i => i.status === 'Atendiendo').length;
+  const resolvedCount = resolvedFromBackend ?? incidents.filter(i => i.status === 'Finalizado').length;
+
   const statusData = [
-    { name: 'Pendiente', value: incidents.filter(i => i.status === 'Pendiente').length, color: '#9ca3af' },
-    { name: 'Atendiendo', value: incidents.filter(i => i.status === 'Atendiendo').length, color: '#3b82f6' },
-    { name: 'Finalizado', value: incidents.filter(i => i.status === 'Finalizado').length, color: '#22c55e' },
+    { name: 'Pendiente', value: pendingCount, color: '#9ca3af' },
+    { name: 'Atendiendo', value: inProgressCount, color: '#3b82f6' },
+    { name: 'Finalizado', value: resolvedCount, color: '#22c55e' },
   ];
 
-  // Calculate overall stats
-  const totalIncidents = incidents.length;
-  const resolvedIncidents = incidents.filter(i => i.status === 'Finalizado').length;
-  const pendingIncidents = incidents.filter(i => i.status === 'Pendiente').length;
+  // Calculate overall stats - use backend data when available
+  const totalIncidents = totalIncidentsFromBackend ?? incidents.length;
+  const resolvedIncidents = resolvedFromBackend ?? incidents.filter(i => i.status === 'Finalizado').length;
+  const pendingIncidents = pendingFromBackend ?? incidents.filter(i => i.status === 'Pendiente').length;
   const criticalIncidents = incidents.filter(i => i.severity === 'Crítica').length;
   const resolutionRate = totalIncidents > 0 ? ((resolvedIncidents / totalIncidents) * 100).toFixed(1) : 0;
 
@@ -97,6 +140,18 @@ export default function AdminAnalytics({ incidents }: AdminAnalyticsProps) {
     .sort((a, b) => b.criticalRate - a.criticalRate)
     .slice(0, 5);
 
+  // Show loading state while fetching backend data
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 text-blue-600 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Cargando datos del panel administrativo...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-7xl mx-auto">
       {/* Header */}
@@ -105,6 +160,13 @@ export default function AdminAnalytics({ incidents }: AdminAnalyticsProps) {
         <p className="text-gray-600">
           Vista completa del sistema de incidentes y análisis de puntos críticos
         </p>
+        {backendSummary && (
+          <div className="mt-2">
+            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+              ✓ Datos sincronizados con el servidor
+            </Badge>
+          </div>
+        )}
       </div>
 
       {/* Key Metrics */}
