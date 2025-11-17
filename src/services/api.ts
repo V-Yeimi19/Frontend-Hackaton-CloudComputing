@@ -1,9 +1,9 @@
 // Servicio de API REST para integración con el backend
 
-const API_BASE_URL_SEGURIDAD = 'https://ejxa6zzhk3.execute-api.us-east-1.amazonaws.com';
-const API_BASE_URL_INCIDENTES = 'https://jdbbruotf8.execute-api.us-east-1.amazonaws.com';
-const API_BASE_URL_VALIDAR_TOKEN = 'https://jdbbruotf8.execute-api.us-east-1.amazonaws.com';
-const API_BASE_URL_ESTADO_INCIDENTE = 'https://rqa3td2hlc.execute-api.us-east-1.amazonaws.com';
+const API_BASE_URL_SEGURIDAD = 'https://t0j3621dni.execute-api.us-east-1.amazonaws.com';
+const API_BASE_URL_INCIDENTES = 'https://3lp5hoedy7.execute-api.us-east-1.amazonaws.com';
+const API_BASE_URL_VALIDAR_TOKEN = 'https://3lp5hoedy7.execute-api.us-east-1.amazonaws.com';
+const API_BASE_URL_ESTADO_INCIDENTE = 'https://qtnopzqirh.execute-api.us-east-1.amazonaws.com';
 const API_BASE_URL_ADMIN_PANEL = 'https://sw8gon2h0d.execute-api.us-east-1.amazonaws.com';
 
 // Mapeo de roles: Frontend -> Backend
@@ -409,7 +409,7 @@ export class IncidentService {
 
   /**
    * Actualizar estado de un incidente
-   * PATCH /incidentes/{id}/estado
+   * PUT /incidentes/{id}/estado
    */
   static async updateIncidentStatus(
     id: string,
@@ -426,7 +426,7 @@ export class IncidentService {
       }
 
       const response = await fetch(`${API_BASE_URL_ESTADO_INCIDENTE}/incidentes/${id}/estado`, {
-        method: 'PATCH',
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
