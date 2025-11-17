@@ -5,152 +5,8 @@ import Dashboard from './components/Dashboard';
 import { websocketService } from './services/websocket';
 import { AuthService, IncidentService } from './services/api';
 import { toast } from 'sonner';
-
-export type UserRole = 'Estudiante' | 'Trabajador' | 'Administrador';
-
-export type WorkArea = 
-  | 'Bienestar Estudiantil'
-  | 'Counter Alumnos'
-  | 'Limpieza'
-  | 'Seguridad'
-  | 'Servicios Financieros'
-  | 'Defensoría Universitaria'
-  | 'Mantenimiento e Infraestructura'
-  | 'Tecnologías de la Información'
-  | 'Servicios Generales'
-  | 'Biblioteca'
-  | 'Laboratorios';
-
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: UserRole;
-  workArea?: WorkArea;
-  avatar?: string;
-}
-
-export interface Incident {
-  id: string;
-  userId: string;
-  userName: string;
-  userEmail: string;
-  description: string;
-  category: string;
-  severity: 'Baja' | 'Media' | 'Alta' | 'Crítica';
-  location: string;
-  floor?: string;
-  assignedArea: WorkArea;
-  status: 'Pendiente' | 'En Proceso' | 'Finalizado';
-  createdAt: Date;
-  updatedAt: Date;
-  resolvedAt?: Date;
-  resolvedBy?: string;
-  imageUrl?: string;
-  priority: number; // Auto-calculated based on severity and time
-}
-
-// Mock data with more realistic incidents
-const mockIncidents: Incident[] = [
-  {
-    id: '1',
-    userId: '101',
-    userName: 'María García Pérez',
-    userEmail: 'maria.garcia@utec.edu.pe',
-    description: 'El baño del piso 7 presenta falta de papel higiénico y los lavamanos están obstruidos',
-    category: 'Limpieza y Mantenimiento',
-    severity: 'Media',
-    location: 'Edificio A - Piso 7',
-    floor: '7',
-    assignedArea: 'Limpieza',
-    status: 'Pendiente',
-    createdAt: new Date('2025-11-16T08:30:00'),
-    updatedAt: new Date('2025-11-16T08:30:00'),
-    priority: 2,
-  },
-  {
-    id: '2',
-    userId: '102',
-    userName: 'Carlos Mendoza Silva',
-    userEmail: 'carlos.mendoza@utec.edu.pe',
-    description: 'Fuga de agua considerable en el laboratorio de química. El agua está llegando al pasillo',
-    category: 'Infraestructura',
-    severity: 'Crítica',
-    location: 'Edificio B - Piso 3, Lab. Química',
-    floor: '3',
-    assignedArea: 'Mantenimiento e Infraestructura',
-    status: 'En Proceso',
-    createdAt: new Date('2025-11-16T07:15:00'),
-    updatedAt: new Date('2025-11-16T07:45:00'),
-    priority: 4,
-  },
-  {
-    id: '3',
-    userId: '103',
-    userName: 'Ana Torres Ramos',
-    userEmail: 'ana.torres@utec.edu.pe',
-    description: 'La silla 15 del aula 401 tiene una pata rota y es peligrosa para sentarse',
-    category: 'Mobiliario',
-    severity: 'Media',
-    location: 'Edificio A - Piso 4, Aula 401',
-    floor: '4',
-    assignedArea: 'Servicios Generales',
-    status: 'Pendiente',
-    createdAt: new Date('2025-11-16T09:00:00'),
-    updatedAt: new Date('2025-11-16T09:00:00'),
-    priority: 2,
-  },
-  {
-    id: '4',
-    userId: '104',
-    userName: 'Luis Fernández Ccama',
-    userEmail: 'luis.fernandez@utec.edu.pe',
-    description: 'El internet en la biblioteca está extremadamente lento y se desconecta constantemente',
-    category: 'Tecnología',
-    severity: 'Alta',
-    location: 'Biblioteca - Piso 2',
-    floor: '2',
-    assignedArea: 'Tecnologías de la Información',
-    status: 'Pendiente',
-    createdAt: new Date('2025-11-16T10:20:00'),
-    updatedAt: new Date('2025-11-16T10:20:00'),
-    priority: 3,
-  },
-  {
-    id: '5',
-    userId: '101',
-    userName: 'María García Pérez',
-    userEmail: 'maria.garcia@utec.edu.pe',
-    description: 'Encontré una laptop olvidada en el aula 305 después de clase',
-    category: 'Seguridad',
-    severity: 'Media',
-    location: 'Edificio A - Piso 3, Aula 305',
-    floor: '3',
-    assignedArea: 'Seguridad',
-    status: 'Finalizado',
-    createdAt: new Date('2025-11-15T14:30:00'),
-    updatedAt: new Date('2025-11-15T16:00:00'),
-    resolvedAt: new Date('2025-11-15T16:00:00'),
-    resolvedBy: 'Pedro Sánchez',
-    priority: 2,
-  },
-  {
-    id: '6',
-    userId: '105',
-    userName: 'Roberto Díaz Flores',
-    userEmail: 'roberto.diaz@utec.edu.pe',
-    description: 'El aire acondicionado del laboratorio de electrónica no funciona y hace mucho calor',
-    category: 'Infraestructura',
-    severity: 'Alta',
-    location: 'Edificio C - Piso 2, Lab. Electrónica',
-    floor: '2',
-    assignedArea: 'Mantenimiento e Infraestructura',
-    status: 'En Proceso',
-    createdAt: new Date('2025-11-16T11:00:00'),
-    updatedAt: new Date('2025-11-16T11:30:00'),
-    priority: 3,
-  },
-];
+import type { Incident, User, UserRole, WorkArea, IncidentStatus } from './types/incident';
+import mockIncidents from './data/mockIncidents';
 
 export default function App() {
   const [currentView, setCurrentView] = useState<'login' | 'register' | 'dashboard'>('login');
@@ -175,12 +31,13 @@ export default function App() {
       });
 
       websocketService.onIncidentStatusChanged((data) => {
+        // The websocket service now emits UI-friendly status strings, but ensure typing here
         setIncidents(prev =>
           prev.map(inc => {
             if (inc.id === data.incidentId) {
               return {
                 ...inc,
-                status: data.status as 'Pendiente' | 'En Proceso' | 'Finalizado',
+                status: data.status as IncidentStatus,
                 updatedAt: new Date(data.updatedAt),
               };
             }
@@ -284,7 +141,7 @@ export default function App() {
     }
   };
 
-  const handleUpdateStatus = async (incidentId: string, newStatus: 'Pendiente' | 'En Proceso' | 'Finalizado') => {
+  const handleUpdateStatus = async (incidentId: string, newStatus: IncidentStatus) => {
     try {
       const result = await IncidentService.updateIncidentStatus(incidentId, newStatus);
 
@@ -297,7 +154,7 @@ export default function App() {
               updatedAt: new Date(),
             };
 
-            if (newStatus === 'Finalizado' && currentUser) {
+            if (newStatus === 'Terminado' && currentUser) {
               updated.resolvedAt = new Date();
               updated.resolvedBy = currentUser.name;
             }
@@ -325,7 +182,7 @@ export default function App() {
 
   if (currentView === 'login') {
     return (
-      <Login 
+      <Login
         onLogin={handleLogin}
         onSwitchToRegister={() => setCurrentView('register')}
       />

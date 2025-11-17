@@ -1,13 +1,13 @@
 import { Badge } from './ui/badge';
-import { Button } from './ui/button';
+import { IncidentService } from '../services/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { AlertCircle, Calendar, MapPin, User } from 'lucide-react';
-import type { Incident } from '../App';
+import type { Incident, IncidentStatus } from '../types/incident';
 
 interface MyTasksProps {
   incidents: Incident[];
-  onUpdateStatus: (incidentId: string, status: 'Pendiente' | 'En atencion' | 'Terminado') => void;
+  onUpdateStatus: (incidentId: string, status: IncidentStatus) => void;
 }
 
 export default function MyTasks({ incidents, onUpdateStatus }: MyTasksProps) {
@@ -47,6 +47,27 @@ export default function MyTasks({ incidents, onUpdateStatus }: MyTasksProps) {
       hour: '2-digit',
       minute: '2-digit',
     }).format(date);
+  };
+
+  // Handler to update incident status in backend and then notify parent to update UI
+  const handleStatusChange = async (
+    incidentId: string,
+    value: 'Pendiente' | 'En atencion' | 'Terminado'
+  ) => {
+    try {
+      // Call backend API (maps UI status to backend inside the service)
+      const res = await IncidentService.updateIncidentStatus(incidentId, value);
+      if (res.success) {
+        // Update parent state so UI reflects the new status
+        onUpdateStatus(incidentId, value);
+      } else {
+        console.error('updateIncidentStatus error:', res.error);
+        alert('No se pudo actualizar el estado: ' + (res.error || 'error desconocido'));
+      }
+    } catch (err) {
+      console.error('Error updating status:', err);
+      alert('Error de conexión al actualizar el estado');
+    }
   };
 
   const pendingCount = incidents.filter(i => i.status === 'Pendiente').length;
@@ -134,7 +155,7 @@ export default function MyTasks({ incidents, onUpdateStatus }: MyTasksProps) {
 
                   <Select
                     value={incident.status}
-                    onValueChange={(value) => onUpdateStatus(incident.id, value as 'Pendiente' | 'En atencion' | 'Terminado')}
+                    onValueChange={(value: string) => handleStatusChange(incident.id, value as 'Pendiente' | 'En atencion' | 'Terminado')}
                   >
                     <SelectTrigger className="w-[180px]">
                       <SelectValue />

@@ -5,7 +5,7 @@ import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { AlertCircle, CheckCircle2, MapPin, Image as ImageIcon } from 'lucide-react';
-import type { Incident, WorkArea } from '../App';
+import type { Incident, WorkArea, Severity } from '../types/incident';
 
 interface ReportIncidentProps {
   onSubmit: (incident: Omit<Incident, 'id' | 'userId' | 'userName' | 'userEmail' | 'status' | 'createdAt' | 'updatedAt' | 'priority'>) => void;
@@ -49,7 +49,7 @@ export default function ReportIncident({ onSubmit }: ReportIncidentProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     onSubmit({
       description,
       category,
@@ -67,10 +67,10 @@ export default function ReportIncident({ onSubmit }: ReportIncidentProps) {
     setFloor('');
     setAssignedArea('Limpieza');
     setShowSuccess(true);
-    
+
     // Hide success message after 4 seconds
     setTimeout(() => setShowSuccess(false), 4000);
-    
+
     // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -87,7 +87,7 @@ export default function ReportIncident({ onSubmit }: ReportIncidentProps) {
             <div className="flex-1">
               <h3 className="text-green-900 mb-1">¡Reporte enviado exitosamente!</h3>
               <p className="text-green-700 mb-3">
-                Hemos recibido tu reporte y el área correspondiente ha sido notificada. 
+                Hemos recibido tu reporte y el área correspondiente ha sido notificada.
                 Puedes hacer seguimiento del estado en la sección "Mis Reportes".
               </p>
               <div className="flex items-center gap-2 text-green-600">
@@ -103,7 +103,7 @@ export default function ReportIncident({ onSubmit }: ReportIncidentProps) {
       <div className="mb-6">
         <h2 className="text-gray-900 mb-2">Nuevo Reporte de Incidente</h2>
         <p className="text-gray-600">
-          Tu reporte nos ayuda a mantener el campus seguro y en óptimas condiciones. 
+          Tu reporte nos ayuda a mantener el campus seguro y en óptimas condiciones.
           Cada incidente es importante y será atendido por el equipo correspondiente.
         </p>
       </div>
@@ -186,7 +186,7 @@ export default function ReportIncident({ onSubmit }: ReportIncidentProps) {
               <Label htmlFor="severity">
                 Nivel de Gravedad <span className="text-red-500">*</span>
               </Label>
-              <Select value={severity} onValueChange={(val) => setSeverity(val as 'Baja' | 'Media' | 'Alta' | 'Crítica')}>
+              <Select value={severity} onValueChange={(val: Severity) => setSeverity(val as 'Baja' | 'Media' | 'Alta' | 'Crítica')}>
                 <SelectTrigger id="severity">
                   <SelectValue />
                 </SelectTrigger>
@@ -225,7 +225,7 @@ export default function ReportIncident({ onSubmit }: ReportIncidentProps) {
             <Label htmlFor="assignedArea">
               Área Responsable <span className="text-red-500">*</span>
             </Label>
-            <Select value={assignedArea} onValueChange={(val) => setAssignedArea(val as WorkArea)}>
+            <Select value={assignedArea} onValueChange={(val: WorkArea) => setAssignedArea(val)}>
               <SelectTrigger id="assignedArea">
                 <SelectValue />
               </SelectTrigger>
@@ -257,8 +257,8 @@ export default function ReportIncident({ onSubmit }: ReportIncidentProps) {
           </div>
 
           {/* Submit Button */}
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all"
           >
             Enviar Reporte

@@ -4,13 +4,14 @@ import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { AlertTriangle, Calendar, Clock, MapPin, User, ArrowUpCircle } from 'lucide-react';
-import type { Incident, WorkArea } from '../App';
+import type { Incident, WorkArea, IncidentStatus } from '../types/incident';
 
 interface AreaIncidentsProps {
   workArea: WorkArea;
   incidents: Incident[];
-  onUpdateStatus: (incidentId: string, status: 'Pendiente' | 'En Proceso' | 'Finalizado') => void;
+  onUpdateStatus: (incidentId: string, status: IncidentStatus) => void;
 }
+
 
 export default function AreaIncidents({ workArea, incidents, onUpdateStatus }: AreaIncidentsProps) {
   const [sortBy, setSortBy] = useState<'date' | 'priority'>('priority');
@@ -30,12 +31,14 @@ export default function AreaIncidents({ workArea, incidents, onUpdateStatus }: A
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: IncidentStatus) => {
     switch (status) {
       case 'Pendiente':
         return 'bg-gray-100 text-gray-800 border-gray-300';
-      case 'En Proceso':
+      case 'En atencion':
         return 'bg-blue-100 text-blue-800 border-blue-300';
+      case 'Terminado':
+        return 'bg-green-100 text-green-800 border-green-300';
       default:
         return 'bg-gray-100 text-gray-800 border-gray-300';
     }
@@ -79,9 +82,9 @@ export default function AreaIncidents({ workArea, incidents, onUpdateStatus }: A
     return b.createdAt.getTime() - a.createdAt.getTime();
   });
 
-  const pendingCount = incidents.filter(i => i.status === 'Pendiente').length;
-  const progressCount = incidents.filter(i => i.status === 'En Proceso').length;
-  const criticalCount = incidents.filter(i => i.severity === 'Crítica' || i.severity === 'Alta').length;
+  const pendingCount = incidents.filter((i: Incident) => i.status === 'Pendiente').length;
+  const progressCount = incidents.filter((i: Incident) => i.status === 'En atencion').length;
+  const criticalCount = incidents.filter((i: Incident) => i.severity === 'Crítica' || i.severity === 'Alta').length;
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -134,7 +137,7 @@ export default function AreaIncidents({ workArea, incidents, onUpdateStatus }: A
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <span className="text-gray-700">Ordenar por:</span>
-          <Select value={sortBy} onValueChange={(v) => setSortBy(v as 'date' | 'priority')}>
+          <Select value={sortBy} onValueChange={(v: 'date' | 'priority') => setSortBy(v)}>
             <SelectTrigger className="w-[180px]">
               <SelectValue />
             </SelectTrigger>
@@ -164,9 +167,9 @@ export default function AreaIncidents({ workArea, incidents, onUpdateStatus }: A
         <div className="space-y-4">
           {sortedIncidents.map((incident) => (
             <Card key={incident.id} className="overflow-hidden hover:shadow-lg transition-all border-l-4" style={{
-              borderLeftColor: incident.severity === 'Crítica' ? '#ef4444' : 
-                               incident.severity === 'Alta' ? '#f97316' :
-                               incident.severity === 'Media' ? '#eab308' : '#22c55e'
+              borderLeftColor: incident.severity === 'Crítica' ? '#ef4444' :
+                incident.severity === 'Alta' ? '#f97316' :
+                  incident.severity === 'Media' ? '#eab308' : '#22c55e'
             }}>
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between gap-4">
@@ -185,19 +188,19 @@ export default function AreaIncidents({ workArea, incidents, onUpdateStatus }: A
                     <CardTitle className="mb-1">{incident.category}</CardTitle>
                     <CardDescription className="text-base">{incident.description}</CardDescription>
                   </div>
-                  
+
                   <div className="flex flex-col gap-2">
                     <Select
                       value={incident.status}
-                      onValueChange={(value) => onUpdateStatus(incident.id, value as 'Pendiente' | 'En Proceso' | 'Finalizado')}
+                      onValueChange={(value: IncidentStatus) => onUpdateStatus(incident.id, value)}
                     >
                       <SelectTrigger className="w-[160px]">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="Pendiente">Pendiente</SelectItem>
-                        <SelectItem value="En Proceso">En Proceso</SelectItem>
-                        <SelectItem value="Finalizado">Finalizado</SelectItem>
+                        <SelectItem value="En atencion">En atención</SelectItem>
+                        <SelectItem value="Terminado">Terminado</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -232,20 +235,20 @@ export default function AreaIncidents({ workArea, incidents, onUpdateStatus }: A
                 {incident.status === 'Pendiente' && (
                   <div className="mt-4 pt-4 border-t">
                     <Button
-                      onClick={() => onUpdateStatus(incident.id, 'En Proceso')}
+                      onClick={() => onUpdateStatus(incident.id, 'En atencion')}
                       className="w-full bg-blue-600 hover:bg-blue-700"
                     >
                       Comenzar Atención
                     </Button>
                   </div>
                 )}
-                {incident.status === 'En Proceso' && (
+                {incident.status === 'En atencion' && (
                   <div className="mt-4 pt-4 border-t">
                     <Button
-                      onClick={() => onUpdateStatus(incident.id, 'Finalizado')}
+                      onClick={() => onUpdateStatus(incident.id, 'Terminado')}
                       className="w-full bg-green-600 hover:bg-green-700"
                     >
-                      Marcar como Finalizado
+                      Marcar como Terminado
                     </Button>
                   </div>
                 )}

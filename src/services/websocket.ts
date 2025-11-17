@@ -1,7 +1,7 @@
-import type { Incident } from '../App';
+import type { Incident } from '../types/incident';
 
 // Configuración del servidor WebSocket (API Gateway WebSocket)
-const WEBSOCKET_URL = import.meta.env.VITE_WEBSOCKET_URL || 'wss://your-websocket-id.execute-api.us-east-1.amazonaws.com/production';
+const WEBSOCKET_URL = import.meta.env.VITE_WEBSOCKET_URL || ' wss://1ptdg9yt1c.execute-api.us-east-1.amazonaws.com/production ';
 
 class WebSocketService {
   private ws: WebSocket | null = null;
@@ -147,6 +147,15 @@ class WebSocketService {
 
     const severity = severityMapping[item.nivelDeGravedad] || 'Media';
 
+    const mapEstado = (estado: string) => {
+      if (!estado) return 'Pendiente';
+      const normalized = String(estado).toLowerCase();
+      if (normalized === 'en proceso' || normalized === 'en_proceso') return 'En atencion';
+      if (normalized === 'finalizado') return 'Terminado';
+      if (normalized === 'pendiente') return 'Pendiente';
+      return 'Pendiente';
+    };
+
     return {
       id: item.id,
       userId: item.createdByEmail || '',
@@ -158,7 +167,7 @@ class WebSocketService {
       location: item.ubicacion || '',
       floor: item.piso || '',
       assignedArea: item.areaResponsable || 'Servicios Generales',
-      status: item.estado || 'Pendiente',
+      status: mapEstado(item.estado) as any,
       createdAt: new Date(item.createdAt || Date.now()),
       updatedAt: new Date(item.updatedAt || item.createdAt || Date.now()),
       priority: priorityMapping[severity],

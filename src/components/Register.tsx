@@ -4,7 +4,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
-import type { UserRole, WorkArea } from '../App';
+import type { UserRole, WorkArea } from '../types/incident';
 
 interface RegisterProps {
   onRegister: (name: string, email: string, password: string, role: UserRole, workArea?: WorkArea) => void;
@@ -113,7 +113,7 @@ export default function Register({ onRegister, onSwitchToLogin }: RegisterProps)
 
             <div className="space-y-3">
               <Label>Tipo de Usuario</Label>
-              <RadioGroup value={role} onValueChange={(value) => setRole(value as UserRole)}>
+              <RadioGroup value={role} onValueChange={(value: string) => setRole(value as UserRole)}>
                 <div className="flex items-center space-x-3 border rounded-lg p-4 hover:bg-gray-50 transition-colors">
                   <RadioGroupItem value="Estudiante" id="estudiante" />
                   <Label htmlFor="estudiante" className="flex-1 cursor-pointer">
@@ -147,7 +147,7 @@ export default function Register({ onRegister, onSwitchToLogin }: RegisterProps)
             {role === 'Trabajador' && (
               <div className="space-y-2 bg-blue-50 p-4 rounded-lg border border-blue-200">
                 <Label htmlFor="workArea">Área de Trabajo</Label>
-                <Select value={workArea} onValueChange={(value) => setWorkArea(value as WorkArea)}>
+                <Select value={workArea} onValueChange={(value: string) => setWorkArea(value as WorkArea)}>
                   <SelectTrigger id="workArea">
                     <SelectValue />
                   </SelectTrigger>

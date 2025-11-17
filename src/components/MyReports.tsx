@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Calendar, Clock, MapPin, TrendingUp, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import { websocketService } from '../services/websocket';
-import type { Incident } from '../App';
+import type { Incident } from '../types/incident';
 
 interface MyReportsProps {
   incidents: Incident[];
@@ -58,7 +58,7 @@ export default function MyReports({ incidents, userId, onIncidentUpdate }: MyRep
           if (inc.id === data.incidentId) {
             return {
               ...inc,
-              status: data.status as 'Pendiente' | 'En Proceso' | 'Finalizado',
+              status: data.status as any,
               updatedAt: new Date(data.updatedAt),
             };
           }
@@ -103,13 +103,13 @@ export default function MyReports({ incidents, userId, onIncidentUpdate }: MyRep
           icon: <AlertCircle className="h-4 w-4" />,
           text: 'Pendiente de asignación'
         };
-      case 'En Proceso':
+      case 'En atencion':
         return {
           color: 'bg-blue-100 text-blue-800 border-blue-300',
           icon: <Loader2 className="h-4 w-4 animate-spin" />,
-          text: 'En proceso de atención'
+          text: 'En atención'
         };
-      case 'Finalizado':
+      case 'Terminado':
         return {
           color: 'bg-green-100 text-green-800 border-green-300',
           icon: <CheckCircle2 className="h-4 w-4" />,
@@ -159,17 +159,17 @@ export default function MyReports({ incidents, userId, onIncidentUpdate }: MyRep
   };
 
   const pendingCount = liveIncidents.filter(i => i.status === 'Pendiente').length;
-  const progressCount = liveIncidents.filter(i => i.status === 'En Proceso').length;
-  const resolvedCount = liveIncidents.filter(i => i.status === 'Finalizado').length;
+  const progressCount = liveIncidents.filter(i => i.status === 'En atencion').length;
+  const resolvedCount = liveIncidents.filter(i => i.status === 'Terminado').length;
 
   const getDisplayedIncidents = () => {
     switch (activeTab) {
       case 'pending':
         return filterIncidents('Pendiente');
       case 'progress':
-        return filterIncidents('En Proceso');
+        return filterIncidents('En atencion');
       case 'resolved':
-        return filterIncidents('Finalizado');
+        return filterIncidents('Terminado');
       default:
         return incidents;
     }
@@ -237,13 +237,12 @@ export default function MyReports({ incidents, userId, onIncidentUpdate }: MyRep
       </div>
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4 bg-gray-100">
-          <TabsTrigger value="all">Todos ({liveIncidents.length})</TabsTrigger>
-          <TabsTrigger value="pending">Pendientes ({pendingCount})</TabsTrigger>
-          <TabsTrigger value="progress">En Proceso ({progressCount})</TabsTrigger>
-          <TabsTrigger value="resolved">Resueltos ({resolvedCount})</TabsTrigger>
-        </TabsList>
+      <Tabs value={activeTab} onValueChange={(v: 'all' | 'pending' | 'progress' | 'resolved') => setActiveTab(v)} className="space-y-6">        <TabsList className="grid w-full grid-cols-4 bg-gray-100">
+        <TabsTrigger value="all">Todos ({liveIncidents.length})</TabsTrigger>
+        <TabsTrigger value="pending">Pendientes ({pendingCount})</TabsTrigger>
+        <TabsTrigger value="progress">En Proceso ({progressCount})</TabsTrigger>
+        <TabsTrigger value="resolved">Resueltos ({resolvedCount})</TabsTrigger>
+      </TabsList>
 
         <TabsContent value={activeTab} className="space-y-4">
           {displayedIncidents.length === 0 ? (
@@ -310,7 +309,7 @@ export default function MyReports({ incidents, userId, onIncidentUpdate }: MyRep
                             <p className="text-gray-500">{formatTimeAgo(incident.updatedAt)}</p>
                           </div>
                         </div>
-                        {incident.status === 'Finalizado' && incident.resolvedAt && (
+                        {incident.status === 'Terminado' && incident.resolvedAt && (
                           <div className="mt-3 pt-3 border-t">
                             <p className="text-green-700">
                               ✅ Resuelto por {incident.resolvedBy} el {formatDate(incident.resolvedAt)}

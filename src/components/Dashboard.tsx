@@ -7,13 +7,13 @@ import MyReports from './MyReports';
 import MyTasks from './MyTasks';
 import AdminAnalytics from './AdminAnalytics';
 import ReportIncident from './ReportIncident';
-import type { User, Incident } from '../App';
+import type { User, Incident, IncidentStatus } from '../types/incident';
 
 interface DashboardProps {
   user: User;
   incidents: Incident[];
   onReportIncident: (incident: Omit<Incident, 'id' | 'userId' | 'userName' | 'userEmail' | 'status' | 'createdAt' | 'updatedAt' | 'priority'>) => void;
-  onUpdateStatus: (incidentId: string, status: 'Pendiente' | 'En Proceso' | 'Finalizado') => void;
+  onUpdateStatus: (incidentId: string, status: IncidentStatus) => void;
   onLogout: () => void;
 }
 
@@ -24,9 +24,9 @@ export default function Dashboard({ user, incidents, onReportIncident, onUpdateS
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Calculate notifications
-  const myPendingReports = incidents.filter(i => i.userId === user.id && i.status !== 'Finalizado').length;
+  const myPendingReports = incidents.filter(i => i.userId === user.id && i.status !== 'Terminado').length;
   const myPendingTasks = user.workArea
-    ? incidents.filter(i => i.assignedArea === user.workArea && i.status !== 'Finalizado').length
+    ? incidents.filter(i => i.assignedArea === user.workArea && i.status !== 'Terminado').length
     : 0;
 
   const getInitials = (name: string) => {

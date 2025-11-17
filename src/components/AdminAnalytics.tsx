@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import { TrendingUp, TrendingDown, AlertTriangle, CheckCircle2, Clock, MapPin } from 'lucide-react';
-import type { Incident, WorkArea } from '../App';
+import type { Incident, WorkArea, IncidentStatus, Severity } from '../types/incident';
 
 interface AdminAnalyticsProps {
   incidents: Incident[];
@@ -25,10 +25,10 @@ export default function AdminAnalytics({ incidents }: AdminAnalyticsProps) {
     }
     acc[area].total++;
     if (incident.status === 'Pendiente') acc[area].pending++;
-    if (incident.status === 'En Proceso') acc[area].inProgress++;
-    if (incident.status === 'Finalizado') acc[area].resolved++;
+    if (incident.status === 'En atencion') acc[area].inProgress++;
+    if (incident.status === 'Terminado') acc[area].resolved++;
     if (incident.severity === 'Crítica' || incident.severity === 'Alta') acc[area].critical++;
-    
+
     return acc;
   }, {} as Record<WorkArea, any>);
 
@@ -49,8 +49,8 @@ export default function AdminAnalytics({ incidents }: AdminAnalyticsProps) {
     area: area.length > 20 ? area.substring(0, 20) + '...' : area,
     fullArea: area,
     Pendientes: stats.pending,
-    'En Proceso': stats.inProgress,
-    Resueltos: stats.resolved,
+    'En Atención': stats.inProgress,
+    Terminados: stats.resolved,
     Total: stats.total,
   }));
 
@@ -63,26 +63,26 @@ export default function AdminAnalytics({ incidents }: AdminAnalyticsProps) {
 
   const statusData = [
     { name: 'Pendiente', value: incidents.filter(i => i.status === 'Pendiente').length, color: '#9ca3af' },
-    { name: 'En Proceso', value: incidents.filter(i => i.status === 'En Proceso').length, color: '#3b82f6' },
-    { name: 'Finalizado', value: incidents.filter(i => i.status === 'Finalizado').length, color: '#22c55e' },
+    { name: 'En Atención', value: incidents.filter(i => i.status === 'En atencion').length, color: '#3b82f6' },
+    { name: 'Terminado', value: incidents.filter(i => i.status === 'Terminado').length, color: '#22c55e' },
   ];
 
   // Calculate overall stats
   const totalIncidents = incidents.length;
-  const resolvedIncidents = incidents.filter(i => i.status === 'Finalizado').length;
+  const resolvedIncidents = incidents.filter(i => i.status === 'Terminado').length;
   const pendingIncidents = incidents.filter(i => i.status === 'Pendiente').length;
   const criticalIncidents = incidents.filter(i => i.severity === 'Crítica').length;
   const resolutionRate = totalIncidents > 0 ? ((resolvedIncidents / totalIncidents) * 100).toFixed(1) : 0;
 
   // Calculate avg resolution time
-  const resolvedWithTime = incidents.filter(i => i.status === 'Finalizado' && i.resolvedAt);
+  const resolvedWithTime = incidents.filter(i => i.status === 'Terminado' && i.resolvedAt);
   const avgResolutionTime = resolvedWithTime.length > 0
     ? resolvedWithTime.reduce((acc, inc) => {
-        if (inc.resolvedAt) {
-          return acc + (inc.resolvedAt.getTime() - inc.createdAt.getTime());
-        }
-        return acc;
-      }, 0) / resolvedWithTime.length
+      if (inc.resolvedAt) {
+        return acc + (inc.resolvedAt.getTime() - inc.createdAt.getTime());
+      }
+      return acc;
+    }, 0) / resolvedWithTime.length
     : 0;
   const avgHours = Math.floor(avgResolutionTime / (1000 * 60 * 60));
 
@@ -187,7 +187,7 @@ export default function AdminAnalytics({ incidents }: AdminAnalyticsProps) {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="area" angle={-45} textAnchor="end" height={100} />
                     <YAxis />
-                    <Tooltip 
+                    <Tooltip
                       content={({ active, payload }) => {
                         if (active && payload && payload.length) {
                           const data = payload[0].payload;
@@ -207,8 +207,8 @@ export default function AdminAnalytics({ incidents }: AdminAnalyticsProps) {
                     />
                     <Legend />
                     <Bar dataKey="Pendientes" stackId="a" fill="#9ca3af" />
-                    <Bar dataKey="En Proceso" stackId="a" fill="#3b82f6" />
-                    <Bar dataKey="Resueltos" stackId="a" fill="#22c55e" />
+                    <Bar dataKey="En Atención" stackId="a" fill="#3b82f6" />
+                    <Bar dataKey="Terminados" stackId="a" fill="#22c55e" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -298,12 +298,11 @@ export default function AdminAnalytics({ incidents }: AdminAnalyticsProps) {
               <div className="space-y-4">
                 {topLocations.map((loc, index) => (
                   <div key={loc.location} className="flex items-center gap-4">
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-white ${
-                      index === 0 ? 'bg-red-500' :
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-white ${index === 0 ? 'bg-red-500' :
                       index === 1 ? 'bg-orange-500' :
-                      index === 2 ? 'bg-yellow-500' :
-                      'bg-blue-500'
-                    }`}>
+                        index === 2 ? 'bg-yellow-500' :
+                          'bg-blue-500'
+                      }`}>
                       {index + 1}
                     </div>
                     <div className="flex-1">
@@ -315,7 +314,7 @@ export default function AdminAnalytics({ incidents }: AdminAnalyticsProps) {
                         <Badge variant="outline">{loc.count} incidentes</Badge>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div 
+                        <div
                           className="bg-blue-600 h-2 rounded-full"
                           style={{ width: `${(loc.count / topLocations[0].count) * 100}%` }}
                         />
@@ -356,7 +355,7 @@ export default function AdminAnalytics({ incidents }: AdminAnalyticsProps) {
                         <Badge className={`
                           ${area.criticalRate > 50 ? 'bg-red-100 text-red-800 border-red-200' :
                             area.criticalRate > 30 ? 'bg-orange-100 text-orange-800 border-orange-200' :
-                            'bg-yellow-100 text-yellow-800 border-yellow-200'}
+                              'bg-yellow-100 text-yellow-800 border-yellow-200'}
                         `}>
                           {area.criticalRate.toFixed(0)}% críticos
                         </Badge>
@@ -366,7 +365,7 @@ export default function AdminAnalytics({ incidents }: AdminAnalyticsProps) {
                           <p className="text-gray-500 mb-1">Incidentes críticos/altos</p>
                           <div className="flex items-center gap-2">
                             <div className="flex-1 bg-gray-200 rounded-full h-2">
-                              <div 
+                              <div
                                 className="bg-red-500 h-2 rounded-full"
                                 style={{ width: `${area.criticalRate}%` }}
                               />
@@ -378,7 +377,7 @@ export default function AdminAnalytics({ incidents }: AdminAnalyticsProps) {
                           <p className="text-gray-500 mb-1">Pendientes</p>
                           <div className="flex items-center gap-2">
                             <div className="flex-1 bg-gray-200 rounded-full h-2">
-                              <div 
+                              <div
                                 className="bg-orange-500 h-2 rounded-full"
                                 style={{ width: `${area.pendingRate}%` }}
                               />

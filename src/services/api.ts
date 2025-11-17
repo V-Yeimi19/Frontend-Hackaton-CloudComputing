@@ -386,7 +386,8 @@ export class IncidentService {
    */
   static async updateIncidentStatus(
     id: string,
-    newStatus: 'Pendiente' | 'En Proceso' | 'Finalizado'
+    // Accept the UI status variants and map to backend values internally
+    newStatus: 'Pendiente' | 'En atencion' | 'Terminado'
   ): Promise<{ success: boolean; data?: any; error?: string }> {
     try {
       const token = TokenStorage.getToken();
@@ -398,14 +399,24 @@ export class IncidentService {
         };
       }
 
+      // Map UI statuses to backend expected values
+      const statusMapping: Record<string, string> = {
+        'Pendiente': 'Pendiente',
+        'En atencion': 'En Proceso',
+        'Terminado': 'Finalizado',
+      };
+
+      const backendStatus = statusMapping[newStatus] || newStatus;
+
       const response = await fetch(`${API_BASE_URL_ESTADO_INCIDENTE}/incidentes/${id}/estado`, {
-        method: 'PATCH',
+        // The backend expects PUT for this endpoint (as provided in project docs)
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
-          estado: newStatus,
+          estado: backendStatus,
         }),
       });
 
