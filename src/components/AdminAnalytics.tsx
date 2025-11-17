@@ -25,7 +25,7 @@ export default function AdminAnalytics({ incidents }: AdminAnalyticsProps) {
     }
     acc[area].total++;
     if (incident.status === 'Pendiente') acc[area].pending++;
-    if (incident.status === 'En Proceso') acc[area].inProgress++;
+    if (incident.status === 'Atendiendo') acc[area].inProgress++;
     if (incident.status === 'Finalizado') acc[area].resolved++;
     if (incident.severity === 'Crítica' || incident.severity === 'Alta') acc[area].critical++;
     
@@ -49,7 +49,7 @@ export default function AdminAnalytics({ incidents }: AdminAnalyticsProps) {
     area: area.length > 20 ? area.substring(0, 20) + '...' : area,
     fullArea: area,
     Pendientes: stats.pending,
-    'En Proceso': stats.inProgress,
+    'Atendiendo': stats.inProgress,
     Resueltos: stats.resolved,
     Total: stats.total,
   }));
@@ -63,7 +63,7 @@ export default function AdminAnalytics({ incidents }: AdminAnalyticsProps) {
 
   const statusData = [
     { name: 'Pendiente', value: incidents.filter(i => i.status === 'Pendiente').length, color: '#9ca3af' },
-    { name: 'En Proceso', value: incidents.filter(i => i.status === 'En Proceso').length, color: '#3b82f6' },
+    { name: 'Atendiendo', value: incidents.filter(i => i.status === 'Atendiendo').length, color: '#3b82f6' },
     { name: 'Finalizado', value: incidents.filter(i => i.status === 'Finalizado').length, color: '#22c55e' },
   ];
 
@@ -207,7 +207,7 @@ export default function AdminAnalytics({ incidents }: AdminAnalyticsProps) {
                     />
                     <Legend />
                     <Bar dataKey="Pendientes" stackId="a" fill="#9ca3af" />
-                    <Bar dataKey="En Proceso" stackId="a" fill="#3b82f6" />
+                    <Bar dataKey="Atendiendo" stackId="a" fill="#3b82f6" />
                     <Bar dataKey="Resueltos" stackId="a" fill="#22c55e" />
                   </BarChart>
                 </ResponsiveContainer>

@@ -17,9 +17,35 @@ export default function Register({ onRegister, onSwitchToLogin }: RegisterProps)
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<UserRole>('Estudiante');
   const [workArea, setWorkArea] = useState<WorkArea>('Limpieza');
+  const [emailError, setEmailError] = useState('');
+
+  const validateEmail = (email: string): boolean => {
+    const emailLower = email.toLowerCase();
+    if (!emailLower.endsWith('@utec.edu.pe')) {
+      setEmailError('El correo debe ser del dominio @utec.edu.pe');
+      return false;
+    }
+    setEmailError('');
+    return true;
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newEmail = e.target.value;
+    setEmail(newEmail);
+    if (newEmail && !newEmail.toLowerCase().endsWith('@utec.edu.pe')) {
+      setEmailError('El correo debe ser del dominio @utec.edu.pe');
+    } else {
+      setEmailError('');
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validar el dominio del correo
+    if (!validateEmail(email)) {
+      return;
+    }
 
     // Determinar el área según el rol
     let area: WorkArea | undefined;
@@ -56,18 +82,10 @@ export default function Register({ onRegister, onSwitchToLogin }: RegisterProps)
           <div className="text-center mb-8">
             <div className="flex items-center justify-center mx-auto mb-4">
               <img
-                src="/assets/utec-logo.svg"
+                src="/assets/UTEC_logo.png"
                 alt="UTEC Logo"
-                className="h-16 w-auto"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                  const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                  if (fallback) fallback.style.display = 'flex';
-                }}
+                className="h-20 w-auto object-contain"
               />
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl hidden items-center justify-center shadow-lg">
-                <span className="text-3xl font-bold text-white">U</span>
-              </div>
             </div>
             <h1 className="text-blue-900 mb-2">Crear Cuenta</h1>
             <p className="text-gray-600">Únete a la comunidad AlertaUTEC</p>
@@ -94,9 +112,19 @@ export default function Register({ onRegister, onSwitchToLogin }: RegisterProps)
                 type="email"
                 placeholder="ejemplo@utec.edu.pe"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={handleEmailChange}
+                pattern=".*@utec\.edu\.pe$"
+                title="El correo debe ser del dominio @utec.edu.pe"
                 required
+                className={emailError ? 'border-red-500 focus:ring-red-500' : ''}
               />
+              {emailError && (
+                <p className="text-red-600 text-sm flex items-center gap-1">
+                  <span>⚠️</span>
+                  <span>{emailError}</span>
+                </p>
+              )}
+              <p className="text-gray-500 text-sm">Usa tu correo institucional de UTEC</p>
             </div>
 
             <div className="space-y-2">

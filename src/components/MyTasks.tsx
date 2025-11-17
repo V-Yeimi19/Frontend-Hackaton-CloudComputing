@@ -7,7 +7,7 @@ import type { Incident } from '../App';
 
 interface MyTasksProps {
   incidents: Incident[];
-  onUpdateStatus: (incidentId: string, status: 'Pendiente' | 'En Proceso' | 'Finalizado') => void;
+  onUpdateStatus: (incidentId: string, status: 'Pendiente' | 'Atendiendo' | 'Finalizado') => void;
 }
 
 export default function MyTasks({ incidents, onUpdateStatus }: MyTasksProps) {
@@ -30,7 +30,7 @@ export default function MyTasks({ incidents, onUpdateStatus }: MyTasksProps) {
     switch (status) {
       case 'Pendiente':
         return 'bg-gray-100 text-gray-800 border-gray-300';
-      case 'En Proceso':
+      case 'Atendiendo':
         return 'bg-blue-100 text-blue-800 border-blue-300';
       case 'Finalizado':
         return 'bg-green-100 text-green-800 border-green-300';
@@ -50,7 +50,7 @@ export default function MyTasks({ incidents, onUpdateStatus }: MyTasksProps) {
   };
 
   const pendingCount = incidents.filter(i => i.status === 'Pendiente').length;
-  const inProgressCount = incidents.filter(i => i.status === 'En Proceso').length;
+  const inProgressCount = incidents.filter(i => i.status === 'Atendiendo').length;
   const completedCount = incidents.filter(i => i.status === 'Finalizado').length;
 
   return (
@@ -131,17 +131,17 @@ export default function MyTasks({ incidents, onUpdateStatus }: MyTasksProps) {
                     <CardTitle className="mb-1">{incident.category}</CardTitle>
                     <CardDescription>{incident.description}</CardDescription>
                   </div>
-                  
+
                   <Select
                     value={incident.status}
-                    onValueChange={(value) => onUpdateStatus(incident.id, value as 'Pendiente' | 'En Proceso' | 'Finalizado')}
+                    onValueChange={(value) => onUpdateStatus(incident.id, value as 'Pendiente' | 'Atendiendo' | 'Finalizado')}
                   >
                     <SelectTrigger className="w-[180px]">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Pendiente">Pendiente</SelectItem>
-                      <SelectItem value="En Proceso">En Proceso</SelectItem>
+                      <SelectItem value="Atendiendo">Atendiendo</SelectItem>
                       <SelectItem value="Finalizado">Finalizado</SelectItem>
                     </SelectContent>
                   </Select>

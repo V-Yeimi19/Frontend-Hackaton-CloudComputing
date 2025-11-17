@@ -35,7 +35,7 @@ export default function AllIncidents({ incidents }: AllIncidentsProps) {
           icon: <AlertCircle className="h-4 w-4" />,
           text: 'Pendiente de asignación'
         };
-      case 'En Proceso':
+      case 'Atendiendo':
         return {
           color: 'bg-blue-100 text-blue-800 border-blue-300',
           icon: <Loader2 className="h-4 w-4 animate-spin" />,
@@ -91,7 +91,7 @@ export default function AllIncidents({ incidents }: AllIncidentsProps) {
   };
 
   const pendingCount = incidents.filter(i => i.status === 'Pendiente').length;
-  const progressCount = incidents.filter(i => i.status === 'En Proceso').length;
+  const progressCount = incidents.filter(i => i.status === 'Atendiendo').length;
   const resolvedCount = incidents.filter(i => i.status === 'Finalizado').length;
 
   const getDisplayedIncidents = () => {
@@ -99,7 +99,7 @@ export default function AllIncidents({ incidents }: AllIncidentsProps) {
       case 'pending':
         return filterIncidents('Pendiente');
       case 'progress':
-        return filterIncidents('En Proceso');
+        return filterIncidents('Atendiendo');
       case 'resolved':
         return filterIncidents('Finalizado');
       default:
@@ -141,7 +141,7 @@ export default function AllIncidents({ incidents }: AllIncidentsProps) {
 
         <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200 p-5 shadow-sm">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-blue-700">En Proceso</span>
+            <span className="text-blue-700">Atendiendo</span>
             <Loader2 className="h-5 w-5 text-blue-500" />
           </div>
           <p className="text-blue-900">{progressCount}</p>
@@ -163,7 +163,7 @@ export default function AllIncidents({ incidents }: AllIncidentsProps) {
         <TabsList className="grid w-full grid-cols-4 bg-gray-100">
           <TabsTrigger value="all">Todos ({incidents.length})</TabsTrigger>
           <TabsTrigger value="pending">Pendientes ({pendingCount})</TabsTrigger>
-          <TabsTrigger value="progress">En Proceso ({progressCount})</TabsTrigger>
+          <TabsTrigger value="progress">Atendiendo ({progressCount})</TabsTrigger>
           <TabsTrigger value="resolved">Resueltos ({resolvedCount})</TabsTrigger>
         </TabsList>
 

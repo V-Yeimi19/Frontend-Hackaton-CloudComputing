@@ -25,18 +25,10 @@ export default function Login({ onLogin, onSwitchToRegister }: LoginProps) {
           <div className="text-center mb-8">
             <div className="flex items-center justify-center mx-auto mb-4">
               <img
-                src="/assets/utec-logo.svg"
+                src="/assets/UTEC_logo.png"
                 alt="UTEC Logo"
-                className="h-16 w-auto"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                  const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                  if (fallback) fallback.style.display = 'flex';
-                }}
+                className="h-20 w-auto object-contain"
               />
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl hidden items-center justify-center shadow-lg">
-                <span className="text-3xl font-bold text-white">U</span>
-              </div>
             </div>
             <h1 className="text-blue-900 mb-2">AlertaUTEC</h1>
             <p className="text-gray-600">Sistema de Gestión de Incidentes</p>

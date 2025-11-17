@@ -7,21 +7,30 @@ import MyReports from './MyReports';
 import MyTasks from './MyTasks';
 import AdminAnalytics from './AdminAnalytics';
 import ReportIncident from './ReportIncident';
+import NotificationsPanel, { type Notification } from './NotificationsPanel';
 import type { User, Incident } from '../App';
 
 interface DashboardProps {
   user: User;
   incidents: Incident[];
+  notifications: Notification[];
   onReportIncident: (incident: Omit<Incident, 'id' | 'userId' | 'userName' | 'userEmail' | 'status' | 'createdAt' | 'updatedAt' | 'priority'>) => void;
-  onUpdateStatus: (incidentId: string, status: 'Pendiente' | 'En Proceso' | 'Finalizado') => void;
+  onUpdateStatus: (incidentId: string, status: 'Pendiente' | 'Atendiendo' | 'Finalizado') => void;
+  onMarkNotificationAsRead: (notificationId: string) => void;
+  onMarkAllNotificationsAsRead: () => void;
   onLogout: () => void;
 }
 
 type ViewType = 'dashboard' | 'my-reports' | 'my-tasks' | 'analytics' | 'report-incident';
 
-export default function Dashboard({ user, incidents, onReportIncident, onUpdateStatus, onLogout }: DashboardProps) {
+export default function Dashboard({ user, incidents, notifications, onReportIncident, onUpdateStatus, onMarkNotificationAsRead, onMarkAllNotificationsAsRead, onLogout }: DashboardProps) {
   const [currentView, setCurrentView] = useState<ViewType>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [notificationsPanelOpen, setNotificationsPanelOpen] = useState(false);
+
+  // Filter notifications for current user
+  const userNotifications = notifications.filter(n => n.userId === user.id);
+  const unreadNotificationsCount = userNotifications.filter(n => !n.read).length;
 
   // Calculate notifications
   const myPendingReports = incidents.filter(i => i.userId === user.id && i.status !== 'Finalizado').length;
@@ -75,18 +84,10 @@ export default function Dashboard({ user, incidents, onReportIncident, onUpdateS
             <div className="flex items-center gap-3">
               <div className="flex items-center justify-center">
                 <img
-                  src="/assets/utec-logo.svg"
+                  src="/assets/UTEC_logo.png"
                   alt="UTEC Logo"
-                  className="h-10 w-auto"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                    const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                    if (fallback) fallback.style.display = 'flex';
-                  }}
+                  className="h-12 w-auto object-contain"
                 />
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl hidden items-center justify-center shadow-lg">
-                  <span className="text-xl font-bold text-white">U</span>
-                </div>
               </div>
               <div>
                 <h1 className="text-blue-900">AlertaUTEC</h1>
@@ -188,10 +189,18 @@ export default function Dashboard({ user, incidents, onReportIncident, onUpdateS
                 </p>
               </div>
             </div>
-            <button className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors">
+            <button
+              onClick={() => setNotificationsPanelOpen(true)}
+              className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
               <Bell className="h-5 w-5 text-gray-600" />
-              {(myPendingReports + myPendingTasks) > 0 && (
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+              {unreadNotificationsCount > 0 && (
+                <>
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                    {unreadNotificationsCount > 9 ? '9+' : unreadNotificationsCount}
+                  </span>
+                </>
               )}
             </button>
           </div>
@@ -241,6 +250,15 @@ export default function Dashboard({ user, incidents, onReportIncident, onUpdateS
           <Plus className="h-6 w-6" />
         </button>
       </div>
+
+      {/* Notifications Panel */}
+      <NotificationsPanel
+        notifications={userNotifications}
+        isOpen={notificationsPanelOpen}
+        onClose={() => setNotificationsPanelOpen(false)}
+        onMarkAsRead={onMarkNotificationAsRead}
+        onMarkAllAsRead={onMarkAllNotificationsAsRead}
+      />
     </div>
   );
 }

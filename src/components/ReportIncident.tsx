@@ -49,7 +49,7 @@ export default function ReportIncident({ onSubmit }: ReportIncidentProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     onSubmit({
       description,
       category,
@@ -67,10 +67,10 @@ export default function ReportIncident({ onSubmit }: ReportIncidentProps) {
     setFloor('');
     setAssignedArea('Limpieza');
     setShowSuccess(true);
-    
+
     // Hide success message after 4 seconds
     setTimeout(() => setShowSuccess(false), 4000);
-    
+
     // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -271,12 +271,11 @@ export default function ReportIncident({ onSubmit }: ReportIncidentProps) {
         <h3 className="text-gray-900 mb-3">¿Necesitas ayuda inmediata?</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700">
           <div>
-            <p className="mb-1">🚨 Emergencias: <span className="text-red-600">Ext. 1234</span></p>
-            <p>📞 Seguridad: <span>Ext. 5678</span></p>
+            <p className="mb-1">🚨 Emergencias: <span className="text-red-600">(511) 230-5025</span></p>
+            <p>📞 Seguridad: <span>(511) 230-5000</span></p>
           </div>
           <div>
-            <p className="mb-1">💬 Counter Alumnos: <span>Piso 1</span></p>
-            <p>📧 Email: <span>ayuda@utec.edu.pe</span></p>
+            <p>📧 Email: <span>bienestarestudiantil@utec.edu.pe</span></p>
           </div>
         </div>
       </div>
