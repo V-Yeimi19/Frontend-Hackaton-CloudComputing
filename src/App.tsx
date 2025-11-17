@@ -153,46 +153,11 @@ const mockIncidents: Incident[] = [
   },
 ];
 
-// Helper functions for localStorage
-const INCIDENTS_STORAGE_KEY = 'alerta_utec_incidents';
-
-const loadIncidentsFromStorage = (): Incident[] => {
-  try {
-    const stored = localStorage.getItem(INCIDENTS_STORAGE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      // Convert date strings back to Date objects
-      return parsed.map((inc: any) => ({
-        ...inc,
-        createdAt: new Date(inc.createdAt),
-        updatedAt: new Date(inc.updatedAt),
-        resolvedAt: inc.resolvedAt ? new Date(inc.resolvedAt) : undefined,
-      }));
-    }
-  } catch (error) {
-    console.error('Error loading incidents from localStorage:', error);
-  }
-  return mockIncidents;
-};
-
-const saveIncidentsToStorage = (incidents: Incident[]) => {
-  try {
-    localStorage.setItem(INCIDENTS_STORAGE_KEY, JSON.stringify(incidents));
-  } catch (error) {
-    console.error('Error saving incidents to localStorage:', error);
-  }
-};
-
 export default function App() {
   const [currentView, setCurrentView] = useState<'login' | 'register' | 'dashboard'>('login');
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [incidents, setIncidents] = useState<Incident[]>(() => loadIncidentsFromStorage());
+  const [incidents, setIncidents] = useState<Incident[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
-
-  // Save incidents to localStorage whenever they change
-  useEffect(() => {
-    saveIncidentsToStorage(incidents);
-  }, [incidents]);
 
   // Configurar WebSocket cuando el usuario inicia sesión
   useEffect(() => {
@@ -259,6 +224,43 @@ export default function App() {
     }
   }, [currentUser]);
 
+  const loadIncidentsFromBackend = async () => {
+    try {
+      const result = await IncidentService.getAllIncidents();
+
+      if (result.success && result.data) {
+        // Convertir los incidentes del backend al formato del frontend
+        const backendIncidents = result.data.map((inc: any) => ({
+          id: inc.id || inc.incidenteId,
+          userId: inc.creadoPor || inc.userId || 'unknown',
+          userName: inc.nombreUsuario || inc.userName || 'Usuario',
+          userEmail: inc.creadoPor || inc.userEmail || 'unknown@utec.edu.pe',
+          description: inc.descripcion || inc.description,
+          category: inc.categoria || inc.category,
+          severity: (inc.nivelDeGravedad || inc.severity || 'Media') as 'Baja' | 'Media' | 'Alta' | 'Crítica',
+          location: inc.ubicacion || inc.location,
+          floor: inc.piso || inc.floor,
+          assignedArea: (inc.areaAsignada || inc.assignedArea) as WorkArea,
+          status: (inc.estado === 'En Proceso' ? 'Atendiendo' : inc.estado || inc.status || 'Pendiente') as 'Pendiente' | 'Atendiendo' | 'Finalizado',
+          createdAt: new Date(inc.fechaCreacion || inc.createdAt || Date.now()),
+          updatedAt: new Date(inc.fechaActualizacion || inc.updatedAt || Date.now()),
+          resolvedAt: inc.fechaResolucion || inc.resolvedAt ? new Date(inc.fechaResolucion || inc.resolvedAt) : undefined,
+          resolvedBy: inc.resuelto_por || inc.resolvedBy,
+          priority: inc.prioridad || inc.priority || 2,
+        }));
+
+        setIncidents(backendIncidents);
+        console.log('✅ Incidentes cargados desde el backend:', backendIncidents.length);
+      } else {
+        console.warn('⚠️ No se pudieron cargar incidentes desde el backend:', result.error);
+        // Mantener los incidentes actuales (de localStorage o mock)
+      }
+    } catch (error) {
+      console.error('❌ Error al cargar incidentes desde el backend:', error);
+      // Mantener los incidentes actuales (de localStorage o mock)
+    }
+  };
+
   const handleLogin = async (email: string, password: string) => {
     try {
       const result = await AuthService.login(email, password);
@@ -267,6 +269,9 @@ export default function App() {
         setCurrentUser(result.data.user);
         setCurrentView('dashboard');
         toast.success('¡Bienvenido! Sesión iniciada correctamente.');
+
+        // Cargar incidentes desde el backend después de iniciar sesión
+        await loadIncidentsFromBackend();
       } else {
         toast.error(result.error || 'Error al iniciar sesión');
       }
@@ -290,6 +295,9 @@ export default function App() {
         setCurrentUser(result.data.user);
         setCurrentView('dashboard');
         toast.success('¡Cuenta creada exitosamente!');
+
+        // Cargar incidentes desde el backend después de registrarse
+        await loadIncidentsFromBackend();
       } else {
         toast.error(result.error || 'Error al registrar usuario');
       }

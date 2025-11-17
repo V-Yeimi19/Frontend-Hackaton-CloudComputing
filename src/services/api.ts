@@ -495,6 +495,50 @@ export class IncidentService {
       };
     }
   }
+
+  /**
+   * Obtener todos los incidentes
+   * GET /incidentes
+   */
+  static async getAllIncidents(): Promise<{ success: boolean; data?: any[]; error?: string }> {
+    try {
+      const token = TokenStorage.getToken();
+
+      if (!token) {
+        return {
+          success: false,
+          error: 'No hay sesión activa',
+        };
+      }
+
+      const response = await fetch(`${API_BASE_URL_INCIDENTES}/incidentes`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return {
+          success: false,
+          error: data.message || 'Error al obtener incidentes',
+        };
+      }
+
+      return {
+        success: true,
+        data: data.incidentes || data || [],
+      };
+    } catch (error) {
+      console.error('Error en getAllIncidents:', error);
+      return {
+        success: false,
+        error: 'Error de conexión con el servidor',
+      };
+    }
+  }
 }
 
 // Servicio de Administración
