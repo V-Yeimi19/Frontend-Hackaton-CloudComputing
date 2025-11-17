@@ -355,6 +355,14 @@ export default function App() {
     if (!currentUser) return;
 
     try {
+      console.log('📝 Creando incidente:', {
+        description: incident.description,
+        category: incident.category,
+        severity: incident.severity,
+        assignedArea: incident.assignedArea,
+        location: incident.location,
+      });
+
       const result = await IncidentService.createIncident({
         description: incident.description,
         category: incident.category,
@@ -365,7 +373,8 @@ export default function App() {
       });
 
       if (result.success && result.data) {
-        toast.success('Incidente reportado exitosamente');
+        console.log('✅ Incidente creado exitosamente en el backend:', result.data);
+        toast.success(`Incidente reportado exitosamente y asignado a ${incident.assignedArea}`);
 
         // Recargar todos los incidentes desde el backend para mantener consistencia
         await loadIncidentsFromBackend();
@@ -376,7 +385,7 @@ export default function App() {
           userId: currentUser.id,
           type: 'report_created',
           title: 'Reporte creado exitosamente',
-          message: `Tu reporte de ${incident.category} ha sido registrado`,
+          message: `Tu reporte de ${incident.category} ha sido registrado y asignado a ${incident.assignedArea}`,
           incidentId: result.data.id || result.data.incidenteId,
           incidentCategory: incident.category,
           createdAt: new Date(),
@@ -384,10 +393,11 @@ export default function App() {
         };
         setNotifications([notification, ...notifications]);
       } else {
+        console.error('❌ Error al crear incidente:', result.error);
         toast.error(result.error || 'Error al reportar incidente');
       }
     } catch (error) {
-      console.error('Error al reportar incidente:', error);
+      console.error('❌ Error al reportar incidente:', error);
       toast.error('Error de conexión. Por favor intenta de nuevo.');
     }
   };

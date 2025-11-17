@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
@@ -11,6 +12,20 @@ interface MyTasksProps {
 }
 
 export default function MyTasks({ incidents, onUpdateStatus }: MyTasksProps) {
+  // Log para debugging - mostrar tareas asignadas
+  useEffect(() => {
+    console.log('📋 Mis Tareas - Total de incidentes asignados:', incidents.length);
+    if (incidents.length > 0) {
+      console.log('📋 Áreas de las tareas asignadas:', incidents.map(i => ({
+        id: i.id,
+        assignedArea: i.assignedArea,
+        category: i.category,
+        status: i.status
+      })));
+    } else {
+      console.log('⚠️ No hay tareas asignadas a este trabajador');
+    }
+  }, [incidents]);
   const getSeverityColor = (severity: string) => {
     switch (severity) {
       case 'Baja':

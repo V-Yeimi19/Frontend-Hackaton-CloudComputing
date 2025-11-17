@@ -237,7 +237,16 @@ export default function Dashboard({ user, incidents, notifications, onReportInci
           )}
           {currentView === 'my-tasks' && user.role === 'Trabajador' && user.workArea && (
             <MyTasks
-              incidents={incidents.filter(i => i.assignedArea === user.workArea)}
+              incidents={(() => {
+                const filteredTasks = incidents.filter(i => i.assignedArea === user.workArea);
+                console.log('🔍 Dashboard - Filtrando tareas para trabajador:', {
+                  workArea: user.workArea,
+                  totalIncidentes: incidents.length,
+                  tareasAsignadas: filteredTasks.length,
+                  todasLasAreas: incidents.map(i => i.assignedArea).filter((v, i, a) => a.indexOf(v) === i)
+                });
+                return filteredTasks;
+              })()}
               onUpdateStatus={onUpdateStatus}
             />
           )}
