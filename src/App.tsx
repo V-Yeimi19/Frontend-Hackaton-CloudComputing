@@ -153,11 +153,46 @@ const mockIncidents: Incident[] = [
   },
 ];
 
+// Helper functions for localStorage
+const INCIDENTS_STORAGE_KEY = 'alerta_utec_incidents';
+
+const loadIncidentsFromStorage = (): Incident[] => {
+  try {
+    const stored = localStorage.getItem(INCIDENTS_STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      // Convert date strings back to Date objects
+      return parsed.map((inc: any) => ({
+        ...inc,
+        createdAt: new Date(inc.createdAt),
+        updatedAt: new Date(inc.updatedAt),
+        resolvedAt: inc.resolvedAt ? new Date(inc.resolvedAt) : undefined,
+      }));
+    }
+  } catch (error) {
+    console.error('Error loading incidents from localStorage:', error);
+  }
+  return mockIncidents;
+};
+
+const saveIncidentsToStorage = (incidents: Incident[]) => {
+  try {
+    localStorage.setItem(INCIDENTS_STORAGE_KEY, JSON.stringify(incidents));
+  } catch (error) {
+    console.error('Error saving incidents to localStorage:', error);
+  }
+};
+
 export default function App() {
   const [currentView, setCurrentView] = useState<'login' | 'register' | 'dashboard'>('login');
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [incidents, setIncidents] = useState<Incident[]>(mockIncidents);
+  const [incidents, setIncidents] = useState<Incident[]>(() => loadIncidentsFromStorage());
   const [notifications, setNotifications] = useState<Notification[]>([]);
+
+  // Save incidents to localStorage whenever they change
+  useEffect(() => {
+    saveIncidentsToStorage(incidents);
+  }, [incidents]);
 
   // Configurar WebSocket cuando el usuario inicia sesión
   useEffect(() => {
