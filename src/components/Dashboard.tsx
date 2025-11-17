@@ -6,6 +6,7 @@ import AllIncidents from './AllIncidents';
 import MyReports from './MyReports';
 import MyTasks from './MyTasks';
 import AdminAnalytics from './AdminAnalytics';
+import AdminEndpointTester from './AdminEndpointTester';
 import ReportIncident from './ReportIncident';
 import NotificationsPanel, { type Notification } from './NotificationsPanel';
 import type { User, Incident } from '../App';
@@ -21,7 +22,7 @@ interface DashboardProps {
   onLogout: () => void;
 }
 
-type ViewType = 'dashboard' | 'my-reports' | 'my-tasks' | 'analytics' | 'report-incident';
+type ViewType = 'dashboard' | 'my-reports' | 'my-tasks' | 'analytics' | 'report-incident' | 'test-endpoints';
 
 export default function Dashboard({ user, incidents, notifications, onReportIncident, onUpdateStatus, onMarkNotificationAsRead, onMarkAllNotificationsAsRead, onLogout }: DashboardProps) {
   const [currentView, setCurrentView] = useState<ViewType>('dashboard');
@@ -66,6 +67,7 @@ export default function Dashboard({ user, incidents, notifications, onReportInci
     { id: 'my-reports', label: 'Mis Reportes', icon: '📋', roles: ['Estudiante', 'Trabajador', 'Administrador'], badge: myPendingReports },
     { id: 'my-tasks', label: 'Mis Tareas', icon: '✅', roles: ['Trabajador'], badge: myPendingTasks },
     { id: 'analytics', label: 'Estadística', icon: '📊', roles: ['Administrador'] },
+    { id: 'test-endpoints', label: 'Test Endpoints', icon: '🧪', roles: ['Administrador'] },
   ];
 
   const visibleNavItems = navigationItems.filter(item => item.roles.includes(user.role));
@@ -238,6 +240,9 @@ export default function Dashboard({ user, incidents, notifications, onReportInci
           )}
           {currentView === 'analytics' && user.role === 'Administrador' && (
             <AdminAnalytics incidents={incidents} />
+          )}
+          {currentView === 'test-endpoints' && user.role === 'Administrador' && (
+            <AdminEndpointTester />
           )}
         </main>
 
