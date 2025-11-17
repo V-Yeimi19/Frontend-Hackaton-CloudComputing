@@ -13,7 +13,7 @@ interface DashboardProps {
   user: User;
   incidents: Incident[];
   onReportIncident: (incident: Omit<Incident, 'id' | 'userId' | 'userName' | 'userEmail' | 'status' | 'createdAt' | 'updatedAt' | 'priority'>) => void;
-  onUpdateStatus: (incidentId: string, status: 'Pendiente' | 'En Proceso' | 'Finalizado') => void;
+  onUpdateStatus: (incidentId: string, status: 'Pendiente' | 'Atendiendo' | 'Finalizado') => void;
   onLogout: () => void;
 }
 
@@ -75,18 +75,10 @@ export default function Dashboard({ user, incidents, onReportIncident, onUpdateS
             <div className="flex items-center gap-3">
               <div className="flex items-center justify-center">
                 <img
-                  src="/assets/utec-logo.svg"
+                  src="/assets/UTEC_logo.png"
                   alt="UTEC Logo"
-                  className="h-10 w-auto"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                    const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                    if (fallback) fallback.style.display = 'flex';
-                  }}
+                  className="h-12 w-auto object-contain"
                 />
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl hidden items-center justify-center shadow-lg">
-                  <span className="text-xl font-bold text-white">U</span>
-                </div>
               </div>
               <div>
                 <h1 className="text-blue-900">AlertaUTEC</h1>

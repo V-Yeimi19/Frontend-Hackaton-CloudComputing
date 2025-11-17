@@ -17,46 +17,42 @@ export default function ReportIncident({ onSubmit }: ReportIncidentProps) {
   const [severity, setSeverity] = useState<'Baja' | 'Media' | 'Alta' | 'Crítica'>('Media');
   const [location, setLocation] = useState('');
   const [floor, setFloor] = useState('');
-  const [assignedArea, setAssignedArea] = useState<WorkArea>('Limpieza');
   const [showSuccess, setShowSuccess] = useState(false);
 
   const categories = [
-    'Limpieza y Mantenimiento',
-    'Infraestructura',
-    'Mobiliario',
-    'Tecnología',
+    'Limpieza',
+    'Bienestar Estudiantil',
     'Seguridad',
+    'Tecnologías de la información',
     'Servicios Generales',
     'Biblioteca',
     'Laboratorios',
-    'Áreas Comunes',
-    'Otro',
   ];
 
-  const workAreas: WorkArea[] = [
-    'Bienestar Estudiantil',
-    'Counter Alumnos',
-    'Limpieza',
-    'Seguridad',
-    'Servicios Financieros',
-    'Defensoría Universitaria',
-    'Mantenimiento e Infraestructura',
-    'Tecnologías de la Información',
-    'Servicios Generales',
-    'Biblioteca',
-    'Laboratorios',
-  ];
+  // Mapeo automático de categoría a área responsable
+  const getCategoryArea = (category: string): WorkArea => {
+    const categoryToArea: Record<string, WorkArea> = {
+      'Limpieza': 'Limpieza',
+      'Bienestar Estudiantil': 'Bienestar Estudiantil',
+      'Seguridad': 'Seguridad',
+      'Tecnologías de la información': 'Tecnologías de la Información',
+      'Servicios Generales': 'Servicios Generales',
+      'Biblioteca': 'Biblioteca',
+      'Laboratorios': 'Laboratorios',
+    };
+    return categoryToArea[category] || 'Servicios Generales';
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     onSubmit({
       description,
       category,
       severity,
       location,
       floor: floor || undefined,
-      assignedArea,
+      assignedArea: getCategoryArea(category),
     });
 
     // Reset form and show success message
@@ -65,12 +61,11 @@ export default function ReportIncident({ onSubmit }: ReportIncidentProps) {
     setSeverity('Media');
     setLocation('');
     setFloor('');
-    setAssignedArea('Limpieza');
     setShowSuccess(true);
-    
+
     // Hide success message after 4 seconds
     setTimeout(() => setShowSuccess(false), 4000);
-    
+
     // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -220,37 +215,15 @@ export default function ReportIncident({ onSubmit }: ReportIncidentProps) {
             </div>
           </div>
 
-          {/* Assigned Area */}
-          <div className="space-y-2">
-            <Label htmlFor="assignedArea">
-              Área Responsable <span className="text-red-500">*</span>
-            </Label>
-            <Select value={assignedArea} onValueChange={(val) => setAssignedArea(val as WorkArea)}>
-              <SelectTrigger id="assignedArea">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {workAreas.map((area) => (
-                  <SelectItem key={area} value={area}>
-                    {area}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="text-gray-500">
-              Selecciona el área que debe atender este incidente
-            </p>
-          </div>
-
           {/* Info Box */}
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-5 flex gap-4">
             <AlertCircle className="h-6 w-6 text-blue-600 flex-shrink-0 mt-0.5" />
             <div>
               <h4 className="text-blue-900 mb-1">Información importante</h4>
               <ul className="text-blue-800 space-y-1 list-disc list-inside">
-                <li>Tu reporte será visible para el área asignada inmediatamente</li>
+                <li>El área responsable será asignada automáticamente según la categoría</li>
+                <li>Tu reporte será visible para el área correspondiente inmediatamente</li>
                 <li>Recibirás actualizaciones sobre el estado de tu reporte</li>
-                <li>Todos los reportes son confidenciales y anónimos si lo prefieres</li>
                 <li>Puedes hacer seguimiento en "Mis Reportes"</li>
               </ul>
             </div>
@@ -271,12 +244,11 @@ export default function ReportIncident({ onSubmit }: ReportIncidentProps) {
         <h3 className="text-gray-900 mb-3">¿Necesitas ayuda inmediata?</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700">
           <div>
-            <p className="mb-1">🚨 Emergencias: <span className="text-red-600">Ext. 1234</span></p>
-            <p>📞 Seguridad: <span>Ext. 5678</span></p>
+            <p className="mb-1">🚨 Emergencias: <span className="text-red-600">(511) 230-5025</span></p>
+            <p>📞 Seguridad: <span>(511) 230-5000</span></p>
           </div>
           <div>
-            <p className="mb-1">💬 Counter Alumnos: <span>Piso 1</span></p>
-            <p>📧 Email: <span>ayuda@utec.edu.pe</span></p>
+            <p>📧 Email: <span>bienestarestudiantil@utec.edu.pe</span></p>
           </div>
         </div>
       </div>

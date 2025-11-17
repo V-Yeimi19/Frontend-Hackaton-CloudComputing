@@ -7,7 +7,11 @@ import type { Incident } from '../App';
 
 interface MyTasksProps {
   incidents: Incident[];
+<<<<<<< Updated upstream
   onUpdateStatus: (incidentId: string, status: 'Pendiente' | 'En atencion' | 'Terminado') => void;
+=======
+  onUpdateStatus: (incidentId: string, status: 'Pendiente' | 'Atendiendo' | 'Finalizado') => void;
+>>>>>>> Stashed changes
 }
 
 export default function MyTasks({ incidents, onUpdateStatus }: MyTasksProps) {
@@ -30,7 +34,11 @@ export default function MyTasks({ incidents, onUpdateStatus }: MyTasksProps) {
     switch (status) {
       case 'Pendiente':
         return 'bg-gray-100 text-gray-800 border-gray-300';
+<<<<<<< Updated upstream
       case 'En atencion':
+=======
+      case 'Atendiendo':
+>>>>>>> Stashed changes
         return 'bg-blue-100 text-blue-800 border-blue-300';
       case 'Terminado':
         return 'bg-green-100 text-green-800 border-green-300';
@@ -50,8 +58,13 @@ export default function MyTasks({ incidents, onUpdateStatus }: MyTasksProps) {
   };
 
   const pendingCount = incidents.filter(i => i.status === 'Pendiente').length;
+<<<<<<< Updated upstream
   const inProgressCount = incidents.filter(i => i.status === 'En atencion').length;
   const completedCount = incidents.filter(i => i.status === 'Terminado').length;
+=======
+  const inProgressCount = incidents.filter(i => i.status === 'Atendiendo').length;
+  const completedCount = incidents.filter(i => i.status === 'Finalizado').length;
+>>>>>>> Stashed changes
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -134,15 +147,24 @@ export default function MyTasks({ incidents, onUpdateStatus }: MyTasksProps) {
 
                   <Select
                     value={incident.status}
+<<<<<<< Updated upstream
                     onValueChange={(value) => onUpdateStatus(incident.id, value as 'Pendiente' | 'En atencion' | 'Terminado')}
+=======
+                    onValueChange={(value) => onUpdateStatus(incident.id, value as 'Pendiente' | 'Atendiendo' | 'Finalizado')}
+>>>>>>> Stashed changes
                   >
                     <SelectTrigger className="w-[180px]">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Pendiente">Pendiente</SelectItem>
+<<<<<<< Updated upstream
                       <SelectItem value="En atencion">En atencion</SelectItem>
                       <SelectItem value="Terminado">Finalizado</SelectItem>
+=======
+                      <SelectItem value="Atendiendo">Atendiendo</SelectItem>
+                      <SelectItem value="Finalizado">Finalizado</SelectItem>
+>>>>>>> Stashed changes
                     </SelectContent>
                   </Select>
                 </div>

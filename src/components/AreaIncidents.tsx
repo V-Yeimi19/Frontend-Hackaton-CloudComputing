@@ -9,7 +9,7 @@ import type { Incident, WorkArea } from '../App';
 interface AreaIncidentsProps {
   workArea: WorkArea;
   incidents: Incident[];
-  onUpdateStatus: (incidentId: string, status: 'Pendiente' | 'En Proceso' | 'Finalizado') => void;
+  onUpdateStatus: (incidentId: string, status: 'Pendiente' | 'Atendiendo' | 'Finalizado') => void;
 }
 
 export default function AreaIncidents({ workArea, incidents, onUpdateStatus }: AreaIncidentsProps) {
@@ -34,7 +34,7 @@ export default function AreaIncidents({ workArea, incidents, onUpdateStatus }: A
     switch (status) {
       case 'Pendiente':
         return 'bg-gray-100 text-gray-800 border-gray-300';
-      case 'En Proceso':
+      case 'Atendiendo':
         return 'bg-blue-100 text-blue-800 border-blue-300';
       default:
         return 'bg-gray-100 text-gray-800 border-gray-300';
@@ -80,7 +80,7 @@ export default function AreaIncidents({ workArea, incidents, onUpdateStatus }: A
   });
 
   const pendingCount = incidents.filter(i => i.status === 'Pendiente').length;
-  const progressCount = incidents.filter(i => i.status === 'En Proceso').length;
+  const progressCount = incidents.filter(i => i.status === 'Atendiendo').length;
   const criticalCount = incidents.filter(i => i.severity === 'Crítica' || i.severity === 'Alta').length;
 
   return (
@@ -113,7 +113,7 @@ export default function AreaIncidents({ workArea, incidents, onUpdateStatus }: A
 
         <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200 p-6 shadow-sm">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-blue-700">En Proceso</span>
+            <span className="text-blue-700">Atendiendo</span>
             <Clock className="h-6 w-6 text-blue-500" />
           </div>
           <p className="text-blue-900">{progressCount}</p>
@@ -189,14 +189,14 @@ export default function AreaIncidents({ workArea, incidents, onUpdateStatus }: A
                   <div className="flex flex-col gap-2">
                     <Select
                       value={incident.status}
-                      onValueChange={(value) => onUpdateStatus(incident.id, value as 'Pendiente' | 'En Proceso' | 'Finalizado')}
+                      onValueChange={(value) => onUpdateStatus(incident.id, value as 'Pendiente' | 'Atendiendo' | 'Finalizado')}
                     >
                       <SelectTrigger className="w-[160px]">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="Pendiente">Pendiente</SelectItem>
-                        <SelectItem value="En Proceso">En Proceso</SelectItem>
+                        <SelectItem value="Atendiendo">Atendiendo</SelectItem>
                         <SelectItem value="Finalizado">Finalizado</SelectItem>
                       </SelectContent>
                     </Select>
@@ -232,14 +232,14 @@ export default function AreaIncidents({ workArea, incidents, onUpdateStatus }: A
                 {incident.status === 'Pendiente' && (
                   <div className="mt-4 pt-4 border-t">
                     <Button
-                      onClick={() => onUpdateStatus(incident.id, 'En Proceso')}
+                      onClick={() => onUpdateStatus(incident.id, 'Atendiendo')}
                       className="w-full bg-blue-600 hover:bg-blue-700"
                     >
                       Comenzar Atención
                     </Button>
                   </div>
                 )}
-                {incident.status === 'En Proceso' && (
+                {incident.status === 'Atendiendo' && (
                   <div className="mt-4 pt-4 border-t">
                     <Button
                       onClick={() => onUpdateStatus(incident.id, 'Finalizado')}

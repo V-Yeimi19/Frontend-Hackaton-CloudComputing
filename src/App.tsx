@@ -41,7 +41,7 @@ export interface Incident {
   location: string;
   floor?: string;
   assignedArea: WorkArea;
-  status: 'Pendiente' | 'En Proceso' | 'Finalizado';
+  status: 'Pendiente' | 'Atendiendo' | 'Finalizado';
   createdAt: Date;
   updatedAt: Date;
   resolvedAt?: Date;
@@ -58,7 +58,7 @@ const mockIncidents: Incident[] = [
     userName: 'María García Pérez',
     userEmail: 'maria.garcia@utec.edu.pe',
     description: 'El baño del piso 7 presenta falta de papel higiénico y los lavamanos están obstruidos',
-    category: 'Limpieza y Mantenimiento',
+    category: 'Limpieza',
     severity: 'Media',
     location: 'Edificio A - Piso 7',
     floor: '7',
@@ -74,12 +74,12 @@ const mockIncidents: Incident[] = [
     userName: 'Carlos Mendoza Silva',
     userEmail: 'carlos.mendoza@utec.edu.pe',
     description: 'Fuga de agua considerable en el laboratorio de química. El agua está llegando al pasillo',
-    category: 'Infraestructura',
+    category: 'Servicios Generales',
     severity: 'Crítica',
     location: 'Edificio B - Piso 3, Lab. Química',
     floor: '3',
     assignedArea: 'Mantenimiento e Infraestructura',
-    status: 'En Proceso',
+    status: 'Atendiendo',
     createdAt: new Date('2025-11-16T07:15:00'),
     updatedAt: new Date('2025-11-16T07:45:00'),
     priority: 4,
@@ -90,7 +90,7 @@ const mockIncidents: Incident[] = [
     userName: 'Ana Torres Ramos',
     userEmail: 'ana.torres@utec.edu.pe',
     description: 'La silla 15 del aula 401 tiene una pata rota y es peligrosa para sentarse',
-    category: 'Mobiliario',
+    category: 'Servicios Generales',
     severity: 'Media',
     location: 'Edificio A - Piso 4, Aula 401',
     floor: '4',
@@ -106,7 +106,7 @@ const mockIncidents: Incident[] = [
     userName: 'Luis Fernández Ccama',
     userEmail: 'luis.fernandez@utec.edu.pe',
     description: 'El internet en la biblioteca está extremadamente lento y se desconecta constantemente',
-    category: 'Tecnología',
+    category: 'Tecnologías de la información',
     severity: 'Alta',
     location: 'Biblioteca - Piso 2',
     floor: '2',
@@ -140,12 +140,12 @@ const mockIncidents: Incident[] = [
     userName: 'Roberto Díaz Flores',
     userEmail: 'roberto.diaz@utec.edu.pe',
     description: 'El aire acondicionado del laboratorio de electrónica no funciona y hace mucho calor',
-    category: 'Infraestructura',
+    category: 'Servicios Generales',
     severity: 'Alta',
     location: 'Edificio C - Piso 2, Lab. Electrónica',
     floor: '2',
     assignedArea: 'Mantenimiento e Infraestructura',
-    status: 'En Proceso',
+    status: 'Atendiendo',
     createdAt: new Date('2025-11-16T11:00:00'),
     updatedAt: new Date('2025-11-16T11:30:00'),
     priority: 3,
@@ -180,7 +180,7 @@ export default function App() {
             if (inc.id === data.incidentId) {
               return {
                 ...inc,
-                status: data.status as 'Pendiente' | 'En Proceso' | 'Finalizado',
+                status: data.status as 'Pendiente' | 'Atendiendo' | 'Finalizado',
                 updatedAt: new Date(data.updatedAt),
               };
             }
@@ -284,7 +284,7 @@ export default function App() {
     }
   };
 
-  const handleUpdateStatus = async (incidentId: string, newStatus: 'Pendiente' | 'En Proceso' | 'Finalizado') => {
+  const handleUpdateStatus = async (incidentId: string, newStatus: 'Pendiente' | 'Atendiendo' | 'Finalizado') => {
     try {
       const result = await IncidentService.updateIncidentStatus(incidentId, newStatus);
 
