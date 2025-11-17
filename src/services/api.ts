@@ -4,7 +4,7 @@ const API_BASE_URL_SEGURIDAD = 'https://t0j3621dni.execute-api.us-east-1.amazona
 const API_BASE_URL_INCIDENTES = 'https://3lp5hoedy7.execute-api.us-east-1.amazonaws.com';
 const API_BASE_URL_VALIDAR_TOKEN = 'https://3lp5hoedy7.execute-api.us-east-1.amazonaws.com';
 const API_BASE_URL_ESTADO_INCIDENTE = 'https://qtnopzqirh.execute-api.us-east-1.amazonaws.com';
-const API_BASE_URL_ADMIN_PANEL = 'https://sw8gon2h0d.execute-api.us-east-1.amazonaws.com';
+const API_BASE_URL_ADMIN_PANEL = 'https://8ht5ra7jbl.execute-api.us-east-1.amazonaws.com';
 
 // Mapeo de roles: Frontend -> Backend
 const ROLE_MAPPING: Record<string, string> = {
@@ -558,7 +558,7 @@ export class AdminService {
         };
       }
 
-      const response = await fetch(`${API_BASE_URL_ADMIN_PANEL}/incidentes/activos`, {
+      const response = await fetch(`${API_BASE_URL_ADMIN_PANEL}/admin/incidentes`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -602,7 +602,7 @@ export class AdminService {
         };
       }
 
-      const response = await fetch(`${API_BASE_URL_ADMIN_PANEL}/incidentes/resumen`, {
+      const response = await fetch(`${API_BASE_URL_ADMIN_PANEL}/admin/incidentes/resumen`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
