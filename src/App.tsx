@@ -229,35 +229,79 @@ export default function App() {
       const result = await IncidentService.getAllIncidents();
 
       if (result.success && result.data) {
+        console.log('📥 Datos recibidos del backend:', result.data);
+
         // Convertir los incidentes del backend al formato del frontend
-        const backendIncidents = result.data.map((inc: any) => ({
-          id: inc.id || inc.incidenteId,
-          userId: inc.creadoPor || inc.userId || 'unknown',
-          userName: inc.nombreUsuario || inc.userName || 'Usuario',
-          userEmail: inc.creadoPor || inc.userEmail || 'unknown@utec.edu.pe',
-          description: inc.descripcion || inc.description,
-          category: inc.categoria || inc.category,
-          severity: (inc.nivelDeGravedad || inc.severity || 'Media') as 'Baja' | 'Media' | 'Alta' | 'Crítica',
-          location: inc.ubicacion || inc.location,
-          floor: inc.piso || inc.floor,
-          assignedArea: (inc.areaAsignada || inc.assignedArea) as WorkArea,
-          status: (inc.estado === 'En Proceso' ? 'Atendiendo' : inc.estado || inc.status || 'Pendiente') as 'Pendiente' | 'Atendiendo' | 'Finalizado',
-          createdAt: new Date(inc.fechaCreacion || inc.createdAt || Date.now()),
-          updatedAt: new Date(inc.fechaActualizacion || inc.updatedAt || Date.now()),
-          resolvedAt: inc.fechaResolucion || inc.resolvedAt ? new Date(inc.fechaResolucion || inc.resolvedAt) : undefined,
-          resolvedBy: inc.resuelto_por || inc.resolvedBy,
-          priority: inc.prioridad || inc.priority || 2,
-        }));
+        const backendIncidents = result.data.map((inc: any) => {
+          // Mapeo de severidad
+          const severityMap: Record<string, 'Baja' | 'Media' | 'Alta' | 'Crítica'> = {
+            'baja': 'Baja',
+            'media': 'Media',
+            'alta': 'Alta',
+            'crítica': 'Crítica',
+            'critica': 'Crítica',
+            'Baja': 'Baja',
+            'Media': 'Media',
+            'Alta': 'Alta',
+            'Crítica': 'Crítica',
+          };
+
+          // Mapeo de estado
+          const statusMap: Record<string, 'Pendiente' | 'Atendiendo' | 'Finalizado'> = {
+            'Pendiente': 'Pendiente',
+            'En Proceso': 'Atendiendo',
+            'Atendiendo': 'Atendiendo',
+            'Finalizado': 'Finalizado',
+            'pendiente': 'Pendiente',
+            'en proceso': 'Atendiendo',
+            'atendiendo': 'Atendiendo',
+            'finalizado': 'Finalizado',
+          };
+
+          const rawSeverity = inc.nivelDeGravedad || inc.severity || 'Media';
+          const rawStatus = inc.estado || inc.status || 'Pendiente';
+
+          // Calcular priority basado en severity
+          const priorityMap: Record<string, number> = {
+            'Baja': 1,
+            'Media': 2,
+            'Alta': 3,
+            'Crítica': 4
+          };
+          const severity = severityMap[rawSeverity] || 'Media';
+          const status = statusMap[rawStatus] || 'Pendiente';
+
+          return {
+            id: inc.id || inc.incidenteId || inc.incident_id,
+            userId: inc.creadoPor || inc.userId || inc.creado_por || 'unknown',
+            userName: inc.nombreUsuario || inc.userName || inc.nombre_usuario || 'Usuario Desconocido',
+            userEmail: inc.emailUsuario || inc.userEmail || inc.creadoPor || inc.email_usuario || 'unknown@utec.edu.pe',
+            description: inc.descripcion || inc.description || '',
+            category: inc.categoria || inc.category || 'Otro',
+            severity,
+            location: inc.ubicacion || inc.location || 'No especificada',
+            floor: inc.piso || inc.floor || '',
+            assignedArea: (inc.areaAsignada || inc.assignedArea || inc.area_asignada || 'Servicios Generales') as WorkArea,
+            status,
+            createdAt: new Date(inc.fechaCreacion || inc.createdAt || inc.fecha_creacion || Date.now()),
+            updatedAt: new Date(inc.fechaActualizacion || inc.updatedAt || inc.fecha_actualizacion || Date.now()),
+            resolvedAt: inc.fechaResolucion || inc.resolvedAt || inc.fecha_resolucion ? new Date(inc.fechaResolucion || inc.resolvedAt || inc.fecha_resolucion) : undefined,
+            resolvedBy: inc.resueltoPor || inc.resolvedBy || inc.resuelto_por,
+            priority: inc.prioridad || inc.priority || priorityMap[severity] || 2,
+          };
+        });
 
         setIncidents(backendIncidents);
         console.log('✅ Incidentes cargados desde el backend:', backendIncidents.length);
+
+        if (backendIncidents.length > 0) {
+          console.log('📊 Primer incidente (muestra):', backendIncidents[0]);
+        }
       } else {
         console.warn('⚠️ No se pudieron cargar incidentes desde el backend:', result.error);
-        // Mantener los incidentes actuales (de localStorage o mock)
       }
     } catch (error) {
       console.error('❌ Error al cargar incidentes desde el backend:', error);
-      // Mantener los incidentes actuales (de localStorage o mock)
     }
   };
 
@@ -321,22 +365,10 @@ export default function App() {
       });
 
       if (result.success && result.data) {
-        // Calculate priority based on severity
-        const priorityMap = { 'Baja': 1, 'Media': 2, 'Alta': 3, 'Crítica': 4 };
+        toast.success('Incidente reportado exitosamente');
 
-        const newIncident: Incident = {
-          ...incident,
-          id: result.data.id || Date.now().toString(),
-          userId: currentUser.id,
-          userName: currentUser.name,
-          userEmail: currentUser.email,
-          status: 'Pendiente',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          priority: priorityMap[incident.severity],
-        };
-
-        setIncidents([newIncident, ...incidents]);
+        // Recargar todos los incidentes desde el backend para mantener consistencia
+        await loadIncidentsFromBackend();
 
         // Crear notificación de reporte creado
         const notification: Notification = {
@@ -345,14 +377,12 @@ export default function App() {
           type: 'report_created',
           title: 'Reporte creado exitosamente',
           message: `Tu reporte de ${incident.category} ha sido registrado`,
-          incidentId: newIncident.id,
+          incidentId: result.data.id || result.data.incidenteId,
           incidentCategory: incident.category,
           createdAt: new Date(),
           read: false,
         };
         setNotifications([notification, ...notifications]);
-
-        toast.success('Incidente reportado exitosamente');
       } else {
         toast.error(result.error || 'Error al reportar incidente');
       }
@@ -367,44 +397,32 @@ export default function App() {
       const result = await IncidentService.updateIncidentStatus(incidentId, newStatus);
 
       if (result.success) {
-        setIncidents(incidents.map(inc => {
-          if (inc.id === incidentId) {
-            const oldStatus = inc.status;
-            const updated: Incident = {
-              ...inc,
-              status: newStatus,
-              updatedAt: new Date(),
-            };
-
-            if (newStatus === 'Finalizado' && currentUser) {
-              updated.resolvedAt = new Date();
-              updated.resolvedBy = currentUser.name;
-            }
-
-            // Crear notificación si el usuario actual NO es el dueño del reporte
-            // (esto significa que otro usuario está actualizando el estado de su reporte)
-            if (currentUser && inc.userId !== currentUser.id) {
-              const notification: Notification = {
-                id: `notif-${Date.now()}-${Math.random()}`,
-                userId: inc.userId,
-                type: 'status_changed',
-                title: 'Estado del reporte actualizado',
-                message: `Tu reporte de ${inc.category} ha cambiado de estado`,
-                incidentId: inc.id,
-                incidentCategory: inc.category,
-                oldStatus: oldStatus,
-                newStatus: newStatus,
-                createdAt: new Date(),
-                read: false,
-              };
-              setNotifications(prev => [notification, ...prev]);
-            }
-
-            return updated;
-          }
-          return inc;
-        }));
         toast.success('Estado del incidente actualizado correctamente');
+
+        // Obtener el incidente antes de recargar para la notificación
+        const incident = incidents.find(inc => inc.id === incidentId);
+        const oldStatus = incident?.status;
+
+        // Recargar todos los incidentes desde el backend para mantener consistencia
+        await loadIncidentsFromBackend();
+
+        // Crear notificación si el usuario actual NO es el dueño del reporte
+        if (currentUser && incident && incident.userId !== currentUser.id) {
+          const notification: Notification = {
+            id: `notif-${Date.now()}-${Math.random()}`,
+            userId: incident.userId,
+            type: 'status_changed',
+            title: 'Estado del reporte actualizado',
+            message: `Tu reporte de ${incident.category} ha cambiado de estado`,
+            incidentId: incident.id,
+            incidentCategory: incident.category,
+            oldStatus: oldStatus,
+            newStatus: newStatus,
+            createdAt: new Date(),
+            read: false,
+          };
+          setNotifications(prev => [notification, ...prev]);
+        }
       } else {
         toast.error(result.error || 'Error al actualizar el estado');
       }
@@ -425,12 +443,13 @@ export default function App() {
       const result = await IncidentService.deleteIncident(incidentId);
 
       if (result.success) {
-        setIncidents(incidents.filter(inc => inc.id !== incidentId));
+        toast.success('Incidente eliminado correctamente');
+
+        // Recargar todos los incidentes desde el backend para mantener consistencia
+        await loadIncidentsFromBackend();
 
         // Eliminar notificaciones relacionadas con el incidente
         setNotifications(notifications.filter(notif => notif.incidentId !== incidentId));
-
-        toast.success('Incidente eliminado correctamente');
       } else {
         toast.error(result.error || 'Error al eliminar el incidente');
       }
