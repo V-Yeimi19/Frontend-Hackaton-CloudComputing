@@ -7,21 +7,30 @@ import MyReports from './MyReports';
 import MyTasks from './MyTasks';
 import AdminAnalytics from './AdminAnalytics';
 import ReportIncident from './ReportIncident';
+import NotificationsPanel, { type Notification } from './NotificationsPanel';
 import type { User, Incident } from '../App';
 
 interface DashboardProps {
   user: User;
   incidents: Incident[];
+  notifications: Notification[];
   onReportIncident: (incident: Omit<Incident, 'id' | 'userId' | 'userName' | 'userEmail' | 'status' | 'createdAt' | 'updatedAt' | 'priority'>) => void;
   onUpdateStatus: (incidentId: string, status: 'Pendiente' | 'Atendiendo' | 'Finalizado') => void;
+  onMarkNotificationAsRead: (notificationId: string) => void;
+  onMarkAllNotificationsAsRead: () => void;
   onLogout: () => void;
 }
 
 type ViewType = 'dashboard' | 'my-reports' | 'my-tasks' | 'analytics' | 'report-incident';
 
-export default function Dashboard({ user, incidents, onReportIncident, onUpdateStatus, onLogout }: DashboardProps) {
+export default function Dashboard({ user, incidents, notifications, onReportIncident, onUpdateStatus, onMarkNotificationAsRead, onMarkAllNotificationsAsRead, onLogout }: DashboardProps) {
   const [currentView, setCurrentView] = useState<ViewType>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [notificationsPanelOpen, setNotificationsPanelOpen] = useState(false);
+
+  // Filter notifications for current user
+  const userNotifications = notifications.filter(n => n.userId === user.id);
+  const unreadNotificationsCount = userNotifications.filter(n => !n.read).length;
 
   // Calculate notifications
   const myPendingReports = incidents.filter(i => i.userId === user.id && i.status !== 'Finalizado').length;
@@ -180,10 +189,18 @@ export default function Dashboard({ user, incidents, onReportIncident, onUpdateS
                 </p>
               </div>
             </div>
-            <button className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors">
+            <button
+              onClick={() => setNotificationsPanelOpen(true)}
+              className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
               <Bell className="h-5 w-5 text-gray-600" />
-              {(myPendingReports + myPendingTasks) > 0 && (
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+              {unreadNotificationsCount > 0 && (
+                <>
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                    {unreadNotificationsCount > 9 ? '9+' : unreadNotificationsCount}
+                  </span>
+                </>
               )}
             </button>
           </div>
@@ -233,6 +250,15 @@ export default function Dashboard({ user, incidents, onReportIncident, onUpdateS
           <Plus className="h-6 w-6" />
         </button>
       </div>
+
+      {/* Notifications Panel */}
+      <NotificationsPanel
+        notifications={userNotifications}
+        isOpen={notificationsPanelOpen}
+        onClose={() => setNotificationsPanelOpen(false)}
+        onMarkAsRead={onMarkNotificationAsRead}
+        onMarkAllAsRead={onMarkAllNotificationsAsRead}
+      />
     </div>
   );
 }

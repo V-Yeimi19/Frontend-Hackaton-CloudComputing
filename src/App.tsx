@@ -5,6 +5,7 @@ import Dashboard from './components/Dashboard';
 import { websocketService } from './services/websocket';
 import { AuthService, IncidentService } from './services/api';
 import { toast } from 'sonner';
+import type { Notification } from './components/NotificationsPanel';
 
 export type UserRole = 'Estudiante' | 'Trabajador' | 'Administrador';
 
@@ -156,6 +157,7 @@ export default function App() {
   const [currentView, setCurrentView] = useState<'login' | 'register' | 'dashboard'>('login');
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [incidents, setIncidents] = useState<Incident[]>(mockIncidents);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
   // Configurar WebSocket cuando el usuario inicia sesión
   useEffect(() => {
@@ -178,6 +180,24 @@ export default function App() {
         setIncidents(prev =>
           prev.map(inc => {
             if (inc.id === data.incidentId) {
+              // Si el incidente pertenece al usuario actual, crear notificación
+              if (currentUser && inc.userId === currentUser.id) {
+                const notification: Notification = {
+                  id: `notif-${Date.now()}-${Math.random()}`,
+                  userId: currentUser.id,
+                  type: 'status_changed',
+                  title: 'Estado del reporte actualizado',
+                  message: `Tu reporte ha cambiado de estado`,
+                  incidentId: inc.id,
+                  incidentCategory: inc.category,
+                  oldStatus: inc.status,
+                  newStatus: data.status,
+                  createdAt: new Date(),
+                  read: false,
+                };
+                setNotifications(prev => [notification, ...prev]);
+              }
+
               return {
                 ...inc,
                 status: data.status as 'Pendiente' | 'Atendiendo' | 'Finalizado',
@@ -274,6 +294,21 @@ export default function App() {
         };
 
         setIncidents([newIncident, ...incidents]);
+
+        // Crear notificación de reporte creado
+        const notification: Notification = {
+          id: `notif-${Date.now()}-${Math.random()}`,
+          userId: currentUser.id,
+          type: 'report_created',
+          title: 'Reporte creado exitosamente',
+          message: `Tu reporte de ${incident.category} ha sido registrado`,
+          incidentId: newIncident.id,
+          incidentCategory: incident.category,
+          createdAt: new Date(),
+          read: false,
+        };
+        setNotifications([notification, ...notifications]);
+
         toast.success('Incidente reportado exitosamente');
       } else {
         toast.error(result.error || 'Error al reportar incidente');
@@ -291,6 +326,7 @@ export default function App() {
       if (result.success) {
         setIncidents(incidents.map(inc => {
           if (inc.id === incidentId) {
+            const oldStatus = inc.status;
             const updated: Incident = {
               ...inc,
               status: newStatus,
@@ -300,6 +336,25 @@ export default function App() {
             if (newStatus === 'Finalizado' && currentUser) {
               updated.resolvedAt = new Date();
               updated.resolvedBy = currentUser.name;
+            }
+
+            // Crear notificación si el usuario actual NO es el dueño del reporte
+            // (esto significa que otro usuario está actualizando el estado de su reporte)
+            if (currentUser && inc.userId !== currentUser.id) {
+              const notification: Notification = {
+                id: `notif-${Date.now()}-${Math.random()}`,
+                userId: inc.userId,
+                type: 'status_changed',
+                title: 'Estado del reporte actualizado',
+                message: `Tu reporte de ${inc.category} ha cambiado de estado`,
+                incidentId: inc.id,
+                incidentCategory: inc.category,
+                oldStatus: oldStatus,
+                newStatus: newStatus,
+                createdAt: new Date(),
+                read: false,
+              };
+              setNotifications(prev => [notification, ...prev]);
             }
 
             return updated;
@@ -314,6 +369,19 @@ export default function App() {
       console.error('Error al actualizar estado:', error);
       toast.error('Error de conexión. Por favor intenta de nuevo.');
     }
+  };
+
+  const handleMarkNotificationAsRead = (notificationId: string) => {
+    setNotifications(notifications.map(notif =>
+      notif.id === notificationId ? { ...notif, read: true } : notif
+    ));
+  };
+
+  const handleMarkAllNotificationsAsRead = () => {
+    if (!currentUser) return;
+    setNotifications(notifications.map(notif =>
+      notif.userId === currentUser.id ? { ...notif, read: true } : notif
+    ));
   };
 
   const handleLogout = () => {
@@ -346,8 +414,11 @@ export default function App() {
       <Dashboard
         user={currentUser}
         incidents={incidents}
+        notifications={notifications}
         onReportIncident={handleReportIncident}
         onUpdateStatus={handleUpdateStatus}
+        onMarkNotificationAsRead={handleMarkNotificationAsRead}
+        onMarkAllNotificationsAsRead={handleMarkAllNotificationsAsRead}
         onLogout={handleLogout}
       />
     );
