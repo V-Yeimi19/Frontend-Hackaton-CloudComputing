@@ -1,16 +1,34 @@
 import { useState } from 'react';
 import { Badge } from './ui/badge';
+import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { Calendar, Clock, MapPin, User, AlertCircle, Loader2, CheckCircle2, TrendingUp } from 'lucide-react';
-import type { Incident } from '../App';
+import { Calendar, Clock, MapPin, User, AlertCircle, Loader2, CheckCircle2, TrendingUp, Trash2 } from 'lucide-react';
+import type { Incident, User as UserType } from '../App';
+import { toast } from 'sonner';
 
 interface AllIncidentsProps {
   incidents: Incident[];
+  currentUser: UserType;
+  onDeleteIncident: (incidentId: string) => void;
 }
 
-export default function AllIncidents({ incidents }: AllIncidentsProps) {
+export default function AllIncidents({ incidents, currentUser, onDeleteIncident }: AllIncidentsProps) {
   const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'progress' | 'resolved'>('all');
+
+  const handleDelete = (incident: Incident) => {
+    const confirmDelete = window.confirm(
+      `¿Estás seguro de eliminar este incidente?\n\n` +
+      `Categoría: ${incident.category}\n` +
+      `Ubicación: ${incident.location}\n` +
+      `Reportado por: ${incident.userName}\n\n` +
+      `Esta acción no se puede deshacer.`
+    );
+
+    if (confirmDelete) {
+      onDeleteIncident(incident.id);
+    }
+  };
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
@@ -205,6 +223,18 @@ export default function AllIncidents({ incidents }: AllIncidentsProps) {
                           <CardTitle className="mb-1">{incident.category}</CardTitle>
                           <CardDescription>{incident.description}</CardDescription>
                         </div>
+                        {/* Delete button - Only visible for Administrators */}
+                        {currentUser.role === 'Administrador' && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(incident)}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            title="Eliminar incidente"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     </CardHeader>
                     <CardContent className="pt-4">

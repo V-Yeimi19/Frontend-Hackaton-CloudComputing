@@ -17,6 +17,7 @@ interface DashboardProps {
   notifications: Notification[];
   onReportIncident: (incident: Omit<Incident, 'id' | 'userId' | 'userName' | 'userEmail' | 'status' | 'createdAt' | 'updatedAt' | 'priority'>) => void;
   onUpdateStatus: (incidentId: string, status: 'Pendiente' | 'Atendiendo' | 'Finalizado') => void;
+  onDeleteIncident: (incidentId: string) => void;
   onMarkNotificationAsRead: (notificationId: string) => void;
   onMarkAllNotificationsAsRead: () => void;
   onLogout: () => void;
@@ -24,7 +25,7 @@ interface DashboardProps {
 
 type ViewType = 'dashboard' | 'my-reports' | 'my-tasks' | 'analytics' | 'report-incident' | 'test-endpoints';
 
-export default function Dashboard({ user, incidents, notifications, onReportIncident, onUpdateStatus, onMarkNotificationAsRead, onMarkAllNotificationsAsRead, onLogout }: DashboardProps) {
+export default function Dashboard({ user, incidents, notifications, onReportIncident, onUpdateStatus, onDeleteIncident, onMarkNotificationAsRead, onMarkAllNotificationsAsRead, onLogout }: DashboardProps) {
   const [currentView, setCurrentView] = useState<ViewType>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notificationsPanelOpen, setNotificationsPanelOpen] = useState(false);
@@ -128,8 +129,8 @@ export default function Dashboard({ user, incidents, notifications, onReportInci
             ))}
           </nav>
 
-          {/* User Profile */}
-          <div className="p-4 border-t">
+          {/* User Profile - Sticky at bottom */}
+          <div className="p-4 border-t bg-white sticky bottom-0">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white">
                 {getInitials(user.name)}
@@ -211,7 +212,11 @@ export default function Dashboard({ user, incidents, notifications, onReportInci
         {/* Content Area */}
         <main className="flex-1 p-6 overflow-y-auto">
           {currentView === 'dashboard' && (
-            <AllIncidents incidents={incidents} />
+            <AllIncidents
+              incidents={incidents}
+              currentUser={user}
+              onDeleteIncident={onDeleteIncident}
+            />
           )}
           {currentView === 'report-incident' && (
             <div className="max-w-4xl mx-auto">

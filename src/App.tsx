@@ -371,6 +371,32 @@ export default function App() {
     }
   };
 
+  const handleDeleteIncident = async (incidentId: string) => {
+    // Solo permitir a administradores eliminar incidentes
+    if (!currentUser || currentUser.role !== 'Administrador') {
+      toast.error('Solo los administradores pueden eliminar incidentes');
+      return;
+    }
+
+    try {
+      const result = await IncidentService.deleteIncident(incidentId);
+
+      if (result.success) {
+        setIncidents(incidents.filter(inc => inc.id !== incidentId));
+
+        // Eliminar notificaciones relacionadas con el incidente
+        setNotifications(notifications.filter(notif => notif.incidentId !== incidentId));
+
+        toast.success('Incidente eliminado correctamente');
+      } else {
+        toast.error(result.error || 'Error al eliminar el incidente');
+      }
+    } catch (error) {
+      console.error('Error al eliminar incidente:', error);
+      toast.error('Error de conexión. Por favor intenta de nuevo.');
+    }
+  };
+
   const handleMarkNotificationAsRead = (notificationId: string) => {
     setNotifications(notifications.map(notif =>
       notif.id === notificationId ? { ...notif, read: true } : notif
@@ -417,6 +443,7 @@ export default function App() {
         notifications={notifications}
         onReportIncident={handleReportIncident}
         onUpdateStatus={handleUpdateStatus}
+        onDeleteIncident={handleDeleteIncident}
         onMarkNotificationAsRead={handleMarkNotificationAsRead}
         onMarkAllNotificationsAsRead={handleMarkAllNotificationsAsRead}
         onLogout={handleLogout}
