@@ -23,6 +23,8 @@ interface BackendUser {
   email: string;
   rol: string;
   area: string;
+  nombre?: string;
+  name?: string;
   createdAt?: string;
 }
 
@@ -110,6 +112,7 @@ export class AuthService {
           password,
           rol: backendRole,
           area: backendArea,
+          nombre: name, // Agregar nombre al backend
         }),
       });
 
@@ -216,7 +219,7 @@ export class AuthService {
       // Crear objeto de usuario compatible con el frontend
       const user = {
         id: loginData.user.email,
-        name: loginData.user.email.split('@')[0],
+        name: loginData.user.nombre || loginData.user.name || loginData.user.email.split('@')[0].replace('.', ' ').split(' ').map((n: string) => n.charAt(0).toUpperCase() + n.slice(1)).join(' '),
         email: loginData.user.email,
         role: frontendRole,
         workArea: loginData.user.area,

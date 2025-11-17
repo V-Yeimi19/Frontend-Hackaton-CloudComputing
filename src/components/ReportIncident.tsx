@@ -220,14 +220,14 @@ export default function ReportIncident({ onSubmit }: ReportIncidentProps) {
             </div>
           </div>
 
-          {/* Assigned Area */}
-          <div className="space-y-2">
-            <Label htmlFor="assignedArea">
+          {/* Assigned Area - IMPORTANTE */}
+          <div className="space-y-2 bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4">
+            <Label htmlFor="assignedArea" className="text-base font-semibold">
               Área Responsable <span className="text-red-500">*</span>
             </Label>
-            <Select value={assignedArea} onValueChange={(val) => setAssignedArea(val as WorkArea)}>
-              <SelectTrigger id="assignedArea">
-                <SelectValue />
+            <Select value={assignedArea} onValueChange={(val) => setAssignedArea(val as WorkArea)} required>
+              <SelectTrigger id="assignedArea" className="bg-white">
+                <SelectValue placeholder="Selecciona el área responsable" />
               </SelectTrigger>
               <SelectContent>
                 {workAreas.map((area) => (
@@ -237,8 +237,8 @@ export default function ReportIncident({ onSubmit }: ReportIncidentProps) {
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-gray-500">
-              Selecciona el área que debe atender este incidente
+            <p className="text-gray-700 font-medium">
+              ⚠️ Selecciona el área que debe atender este incidente. El trabajador asignado a esta área recibirá la notificación.
             </p>
           </div>
 
